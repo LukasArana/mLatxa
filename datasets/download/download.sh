@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=16
 #SBATCH --time=72:00:00
-
+#SBATCH --mem=20G
 #SBATCH --partition=hitz-exclusive
 #SBATCH --account=hitz-exclusive
 #SBATCH --job-name=download_finevision
@@ -9,4 +9,4 @@
 #SBATCH --error=err/download_finevision_%j.err
 
 source env/bin/activate
-HF_XET_HIGH_PERFORMANCE=1 python3 download_finevision.py
+HF_XET_HIGH_PERFORMANCE=1 python3 download/download_finevision.py
