@@ -17,8 +17,8 @@ snapshot_download(
     repo_id="HuggingFaceM4/FineVision",
     repo_type="dataset",
     local_dir="${DATA_DIR}/finevision/.",
-    local_dir_use_symlinks=False, # Critical for speed on clusters
-    resume_download=True
+    max_workers=32
+
 )
 
 print(f"✅ Done! Total time: {time.time() - start_time:.2f}s")
