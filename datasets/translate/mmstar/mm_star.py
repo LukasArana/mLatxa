@@ -81,7 +81,7 @@ def main(args):
 
     output_dir = os.path.join(
         args.output_path,
-        f"{os.path.basename(args.dataset_path).replace(".tsv", "")}_{args.prompt_lang}",
+        f"{os.path.basename(args.dataset_path).replace('.tsv', '')}_{args.prompt_lang}",
     )
     os.makedirs(output_dir, exist_ok=True)
     output_file_path = os.path.join(
