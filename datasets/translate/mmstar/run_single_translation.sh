@@ -1,10 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=dataset_translation_%A_%a
+#SBATCH --job-name=mmstar_translation
 #SBATCH --cpus-per-task=10
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
-#SBATCH --account=hitz-exclusive
-#SBATCH --partition=hitz-exclusive
 #SBATCH --mem=100G
 #SBATCH --time=24:00:00
 #SBATCH --output=/home/larana/mLatxa/datasets/translate/mmstar/out/mm_star.out
@@ -19,6 +17,7 @@ export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 cd /home/larana/mLatxa/datasets/translate
 
+source /home/larana/mLatxa/datasets/translate/mmstar/env/bin/activate
 
 echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
 
