@@ -155,7 +155,6 @@ def main(args):
                     continue
                 batch[idx]["question"] = output
                 conversation_id += 1
-                breakpoint()
                 try:
                     print(json.dumps(batch[idx], ensure_ascii=False), file=f)
                 except UnicodeEncodeError: # Emojis raise this error
