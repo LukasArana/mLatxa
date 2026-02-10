@@ -3,9 +3,12 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:2
+#SBATCH --account=hitz-exclusive
+#SBATCH --partition=hitz-exclusive
 #SBATCH --mem=100G
-#SBATCH --output=/sorgin1/users/larana/Translation/slurm/dataset_translation_eu.out
-#SBATCH --error=/sorgin1/users/larana/Translation/slurm/dataset_translation_eu.err
+#SBATCH --time=24:00:00
+#SBATCH --output=/home/larana/mLatxa/datasets/translate/mmstar/out/mm_star.out
+#SBATCH --error=/home/larana/mLatxa/datasets/translate/mmstar/err/mm_star.err
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -14,9 +17,9 @@ export TRANSFORMERS_NO_ADVISORY_WARNINGS=true
 export OMP_NUM_THREADS=16
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
-conda activate translation
 cd /home/larana/mLatxa/datasets/translate
-ls
+
+
 echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
 
 # Run the Python script
