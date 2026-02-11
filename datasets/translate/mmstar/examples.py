@@ -9,6 +9,8 @@ examples ={
                 2. Use standard Basque language (batua)
                 3. Keep the technical terms that don't have widely accepted Basque translations
                 4. Strictly preserve the format of the instructions. Do not translate them.
+                5. Never use parenthesis in the option choices. (A) -> A, (B) -> B, (C) -> C, (D) -> D
+                6. Translate these words as given: Hint -> Argibidea, Question -> Galdera, Options -> Aukerak 
 
                 Please provide accurate Basque translations for all text fields."""
             },
@@ -22,7 +24,7 @@ examples ={
             },
             {
                 "role": "user",
-                "content": f"Translate the following example to Basque \n\n\n What is the overall theme of this image?\nOptions: A: Sports, B: Sunset, C: Nature, D: Kids playing"
+                "content": f"Translate the following example to Basque \n\n\n What is the overall theme of this image?\nOptions: (A): Sports, (B): Sunset, (C): Nature, (D): Kids playing"
 
             },
             {
