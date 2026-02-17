@@ -1,0 +1,46 @@
+{
+    "magpie-llama-31-instruct": {
+        "dataset_path": "/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl",
+        "tags": ["chat", "instruction", "english"]
+    },
+    "latxa-aldizkariak": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/full.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-berria": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/berria-202509.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-bog": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bog_euskera_18_09.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+   },
+    "latxa-booktegi": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/booktegi-bsc.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-bopv": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bopv_eu_18_09.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-botha": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/botha_eu_18_09.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-cc-bsc": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/colossal_oscar_2023-14_eu.train.part-0001-of-0001.shuffled.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-cultura-x": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/eu.train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    },
+    "latxa-wikipedia": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/wikipedia.train.eu.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque", "quality"]
+    },
+    "latxa-euscrawl": {
+        "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/train.04_clean-01.onlytext.jsonl",
+        "tags": ["pretrain", "basque"]
+    }
+}
