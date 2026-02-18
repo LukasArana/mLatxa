@@ -1,0 +1,38 @@
+model: /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct
+model_name: swift-bot
+model_author: swift
+system: "You are a helpful assistant."
+
+train_type: full
+torch_dtype: bfloat16
+deepspeed: zero3
+attn_impl: flash_attention_2
+packing: true
+gradient_checkpointing: true
+max_length: 8192
+use_liger_kernel: true
+
+# Hyperparameters
+num_train_epochs: 4
+per_device_train_batch_size: 4
+learning_rate: 0.00001
+gradient_accumulation_steps: 1
+warmup_ratio: 0.05
+
+# Data Handling
+cached_dataset: /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train
+split_dataset_ratio: 0
+dataset_num_proc: 16
+dataloader_num_workers: 16
+load_from_cache_file: true
+
+freeze_llm: false
+freeze_vit: true
+vit_gradient_checkpointing: false
+freeze_aligner: false
+
+output_dir: /leonardo_work/AIFAC_5C0_261/multimodalModels
+save_strategy: steps
+save_steps: 3500
+save_total_limit: 4
+logging_steps: 1

@@ -1,0 +1,52 @@
+model: /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct
+model_name: swift-bot
+model_author: swift
+system: "You are a helpful assistant."
+
+train_type: full
+torch_dtype: bfloat16
+attn_impl: flash_attention_2
+deepspeed: zero3
+
+padding_free: false
+packing: true
+gradient_checkpointing: true
+max_length: 8191
+
+# Hyperparameters
+num_train_epochs: 4
+per_device_train_batch_size: 1
+learning_rate: 0.00001
+gradient_accumulation_steps: 1
+warmup_ratio: 0.05
+
+# Data Handling
+dataset:
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/wikipedia.train.eu.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/eu.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/colossal_oscar_2023-14_eu.train.part-0001-of-0001.shuffled.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/botha_eu_18_09.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bopv_eu_18_09.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/booktegi-bsc.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bog_euskera_18_09.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/berria-202509.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/full.train.04_clean-01.onlytext.jsonl
+  - /leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl
+
+split_dataset_ratio: 0.001
+dataset_num_proc: 32
+dataloader_num_workers: 32
+load_from_cache_file: true
+cached_dataset: /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train
+
+freeze_llm: false
+freeze_vit: true
+vit_gradient_checkpointing: false
+freeze_aligner: false
+
+output_dir: /leonardo_work/AIFAC_5C0_261/multimodalModels
+save_strategy: steps
+save_steps: 3500
+save_total_limit: 4
+logging_steps: 1
