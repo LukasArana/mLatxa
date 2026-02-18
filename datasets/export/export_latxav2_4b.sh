@@ -40,4 +40,4 @@ swift export \
     --dataset_num_proc 16 \
     --split_dataset_ratio 0.1 \
     --to_cached_dataset \
-    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2
+    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen4b
