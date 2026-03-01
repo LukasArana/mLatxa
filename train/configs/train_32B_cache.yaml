@@ -5,20 +5,30 @@ system: "You are a helpful assistant."
 
 train_type: full
 torch_dtype: bfloat16
-deepspeed: zero3
+deepspeed: /leonardo/home/userexternal/laranaga/mLatxa/train/scripts/deepspeed_conf.json
 attn_impl: flash_attention_2
 packing: true
-gradient_checkpointing: true
+gradient_checkpointing: false
 max_length: 8192
 use_liger_kernel: true
 
 # Hyperparameters
-num_train_epochs: 4
-per_device_train_batch_size: 4
-learning_rate: 0.00001
+num_train_epochs: 2
+per_device_train_batch_size: 2
 gradient_accumulation_steps: 1
-warmup_ratio: 0.05
 
+# Optimizer and Scheduler
+warmup_ratio: 0.1
+weight_decay: 0.1
+adam_beta1: 0.9
+adam_beta2: 0.95
+adam_epsilon: 1e-8
+lr_scheduler_type: cosine
+learning_rate: 0.00001
+
+
+
+# Should be 10813318240 llama tokens. It is 8187712460 qwen tokens
 # Data Handling
 cached_dataset: /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train
 split_dataset_ratio: 0
@@ -33,6 +43,7 @@ freeze_aligner: false
 
 output_dir: /leonardo_work/AIFAC_5C0_261/multimodalModels
 save_strategy: steps
-save_steps: 3500
+save_steps: 100
 save_total_limit: 4
-logging_steps: 1
+report_to: wandb
+logging_steps: 5
