@@ -13,22 +13,25 @@ def convert_to_base64(pil_image):
     return f"data:image/jpg;base64,{img_str}"
 
 def process_geo_to_mswift(dataset_path):
+    print("Processing dataset:", dataset_path)
     # Load the dataset from the provided path
     if "jsonl" in dataset_path:
         # If it's a JSONL file, we can read it directly into a list of dicts
         with open(dataset_path, 'r', encoding='utf-8') as f:
-            dataset = [json.loads(line) for line in f][0]
+            dataset = [json.loads(line) for line in f]
     else:
         dataset = load_dataset(dataset_path)
 
-    # We'll assume we are processing the 'train' split based on your output
-    split = 'train' if 'train' in dataset else list(dataset.keys())[0]
-
+    if not isinstance(dataset, list):
+        assert len(dataset) == 1, "Expected only one split in the dataset. Please check the dataset structure."
+        dataset = dataset[0]
+        # We'll assume we are processing the 'train' split based on your output
+        split = 'train' if 'train' in dataset else list(dataset.keys())[0]
+        dataset = dataset[split]
     mswift_data = []
-
-    for idx, item in enumerate(dataset[split]):
+    breakpoint()
+    for idx, item in enumerate(dataset):
         # 1. Handle Images
-        # Geo3k 'images' feature is usually a list of PIL Image objects
         base64_images = []
         if 'images' in item:
             multimodal = True
@@ -41,20 +44,15 @@ def process_geo_to_mswift(dataset_path):
                     base64_images.append(img)
         else:
             multimodal = False
-            texts = dataset
-        # 2. Handle Messages
-        # FineVision/Geo3k 'texts' is often a list of strings or a conversation list
-        # Based on typical MSWIFT structure:
+            texts = dataset[idx]
         messages = []
-        roles = ['user', 'assistant']  # Assuming alternating roles; adjust if your dataset has explicit roles
-        # Construct the conversation. If 'texts' is a simple list of [User, Assistant]
-        for i, turn in enumerate(texts): # Assuming texts[0] is a list of alternating User and Assistant messages
-            print(idx)
-            if isinstance(turn, str): # Data is pretraining style without explicit roles
-                turn = texts[turn]
+        roles = ["system", "user", "assistant"]
+        for i, turn in enumerate(texts):
+
+            if isinstance(turn, str) or "text" in turn: # Data is pretraining style without explicit roles
                 messages.append({
                     "role": "assistant",
-                    "content": turn
+                    "content": texts[turn]
                 })
                 continue
 
@@ -80,9 +78,12 @@ def process_geo_to_mswift(dataset_path):
             mswift_entry["images"] = base64_images
 
         mswift_data.append(mswift_entry)
+    breakpoint()
     # Save as JSONL
     output_dir = "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/"
-    output_file = os.path.join(output_dir, dataset_path.split('/')[-1])
+    output_file = os.path.join(output_dir, dataset_path.split('/')[-2], dataset_path.split('/')[-1])
+    print(output_file)
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, 'w', encoding='utf-8') as f:
         for entry in mswift_data:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
@@ -91,5 +92,35 @@ def process_geo_to_mswift(dataset_path):
 
 # Usage
 if __name__ == "__main__":
+    datasets = [
+    #    "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/aldizkariak/full.train.04_clean-01.onlytext.jsonl",
+     #   "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/berria/berria-202509.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/bog/bog_euskera_18_09.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/booktegi/booktegi-bsc.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/bopv/bopv_eu_18_09.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/botha/botha_eu_18_09.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/cc-bsc/colossal_oscar_2023-14_eu.train.part-0001-of-0001.shuffled.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/colossal-oscar/05-06-23_eu_meta.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/colossal-oscar/06-07-22_eu_meta.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/cultura-x/eu.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/egunkaria_1999-2006/2001-2006.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/euscrawl_v1/euscrawl-v1.train.full.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/euscrawl_v1.202311/euscrawl-v1-2023.train.full.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/euscrawl_v1.202509_/euscrawl-v1-202509.train.full.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/euscrawl_v2/train.04_clean-01.onlytext.jsonl",
+##        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/finepdf/train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/fineweb/full.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/hplt_v1/full.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/hplt_v2/full.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/OpenSubtitles/eu.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/parleus/parlamentu_db_final_eu.train.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/wikipedia/wikipedia.train.eu.04_clean-01.onlytext.jsonl",
+#        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/zelaihandi/zelaiHandi.train.trimmed.04_clean-01.onlytext.jsonl",
+        "/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.jsonl",
+        "/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl"
+    ]
+    #/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.jsonl
+    #
     # Replace "geo3k" with your local path if it's not the hub version
-    process_geo_to_mswift("/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/euscrawl_v2/train.04_clean-01.onlytext.jsonl")
+    for dataset in datasets:
+        process_geo_to_mswift(dataset)
