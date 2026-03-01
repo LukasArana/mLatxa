@@ -17,27 +17,22 @@ export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
 # System Temp Directory
 export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
 
+#WANBD
+export WANDB_PROJECT="qwen3-vl-finetuning"
+export WANDB_ENTITY="larana"
+export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+mkdir -p $WANDB_DIR
 # 4. Clean existing small caches (Free up space if root disk is already full)
 rm -rf ~/.cache/huggingface
 rm -rf ~/.cache/modelscope
-rm -rf /tmp/*
 
 # 5. Run your export command
 swift export \
     --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/wikipedia.train.eu.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/eu.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/colossal_oscar_2023-14_eu.train.part-0001-of-0001.shuffled.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/botha_eu_18_09.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bopv_eu_18_09.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/booktegi-bsc.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/bog_euskera_18_09.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/berria-202509.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/full.train.04_clean-01.onlytext.jsonl \
-    --dataset /leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl \
-    --exist_ok \
+    --custom_dataset_info dataset_info.json \
+    --dataset aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi magpie_qwen magpie_llama \
+    --template qwen \
+    --max_length 8192 \
     --dataset_num_proc 32 \
-    --split_dataset_ratio 0.1 \
     --to_cached_dataset \
-    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b
+    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train/
