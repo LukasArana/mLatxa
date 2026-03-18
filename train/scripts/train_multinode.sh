@@ -1,71 +1,135 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
 #SBATCH --nodes=16
-#SBATCH --cpus-per-task=16
-#SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --time=24:00:00
-#SBATCH --account AIFAC_5C0_261
+#SBATCH --time 24:00:00
+#SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
 #SBATCH --qos=normal
-#SBATCH --output=logs/%j.out
-#SBATCH --requeue
-#SBATCH --mem=494000MB
+#SBATCH --output=logs/%j_normal.out
+#SBATCH --error=logs/%j_normal.err
+#SBATCH --exclusive
 
-# --- Directory Setup ---
-mkdir -p /leonardo_work/AIFAC_5C0_261/hf_cache
-mkdir -p /leonardo_work/AIFAC_5C0_261/modelscope_cache
-mkdir -p /leonardo_work/AIFAC_5C0_261/tmp
+# --- Environment Activation ---
+source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
 
-# --- Environment Variables ---
+# --- Directory Setup & Variables ---
+export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
+export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
+export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
+export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+
+mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
+
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
 export WANDB_ENTITY="USER"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
-mkdir -p $WANDB_DIR
 
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export OMP_NUM_THREADS=8
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export OMP_NUM_THREADS=16
+export NNODES=$SLURM_NNODES
+export GPUS_PER_NODE=4
 
-# --- Network & Distributed Config ---
-# Get the first node's name for the Master
+# --- Network & Distributed Config (Leonardo Specifics) ---
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+
+# Prevent crashing when loading heavy multimodal datasets
+export NCCL_TIMEOUT=14400
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=14400
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+
+# Leonardo quirk: Prevent NICs from being used for inter-CPU communication
+export NCCL_NET_DISABLE_INTRA=1
+
+# InfiniBand setups for Leonardo Boost
+export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3
+export NCCL_IB_GID_INDEX=3
+export NCCL_NET_GDR_LEVEL=2
+export SWIFT_PATCH_CONV3D=1
+
+# Get the Master Node's IP address directly (fixes hostname resolution issues in torchrun)
 nodes=($(scontrol show hostnames $SLURM_JOB_NODELIST))
 head_node=${nodes[0]}
 
-export MASTER_ADDR=$head_node
-export MASTER_PORT=29505
-export NCCL_TIMEOUT=18000
+# Added -N 1 -n 1 for cleaner execution
+head_node_ip=$(srun -N 1 -n 1 -w $head_node hostname -I | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
 
-# Fix the deprecated warning from your logs
-export PYTORCH_ALLOC_CONF="expandable_segments:True"
+#export MASTER_ADDR=$head_node_ip
+# Deterministic port based on SLURM_JOB_ID to prevent race conditions
+#export MASTER_PORT=$(( 10000 + ($SLURM_JOB_ID % 50000) ))
 
-# Leonardo Boost Specific NCCL tuning
-export NCCL_IB_DISABLE=0
-export NCCL_NET_GDR_LEVEL=2
-export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3
-#export NCCL_SOCKET_IFNAME=hsn0
-export NCCL_DEBUG=INFO
-export SWIFT_PATCH_CONV3D=1
+# CRITICAL FOR TORCHRUN: Force Gloo (the rendezvous backend) to use the InfiniBand interface
+export GLOO_SOCKET_IFNAME=ib0  # Change to eno1 if ib0 still times out
 
-
-# Load qwen3-vl specific environment variables 8187712460
+# Qwen3-VL specific variables
 export video_min_token_num=0
 export video_max_token_num=0
-# --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9/bin/activate
+
+nvidia-smi topo -m
+
+export MASTER_PORT=9327
+export MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+
 
 # --- Training Launch ---
-# Key Fix: We pass --node_rank=$SLURM_PROCID so each node knows its place.
-# Key Fix: We use --rdzv_endpoint to ensure all nodes find the Master.
-srun --nodes=$SLURM_NNODES --ntasks-per-node=1 \
-    torchrun \
-    --nnodes=$SLURM_NNODES \
-    --nproc_per_node=4 \
-    --rdzv_id=$SLURM_JOB_ID \
-    --rdzv_backend=c10d \
-    --rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT \
-    --node_rank=$SLURM_PROCID \
-    $(which swift) sft --config $HOME/mLatxa/train/configs/train_32B_cache.yaml
+echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $MASTER_PORT"
+
+# For more information on multi-node training launch methods, refer to:
+# https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
+
+MASTER_PORT=9327
+MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+
+srun accelerate launch \
+    --num_processes $(( $NNODES * $GPUS_PER_NODE )) \
+    --num_machines $NNODES \
+    --mixed_precision bf16 \
+    --dynamo_backend "no" \
+    --rdzv_backend c10d \
+    --main_process_ip $MAIN_PROCESS_IP \
+    --main_process_port $MASTER_PORT \
+    --machine_rank $SLURM_NODEID \
+    $HOME/ms-swift/swift/cli/sft.py \
+    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
+    --system "You are a helpful assistant." \
+    --model_author swift \
+    --freeze_llm false \
+    --freeze_vit true \
+    --freeze_aligner false \
+    --average_tokens_across_devices true \
+    --save_safetensors true \
+    --model_name swift-bot \
+    --train_type full \
+    --torch_dtype bfloat16 \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --load_from_cache_file true \
+    --split_dataset_ratio 0 \
+    --deepspeed $HOME/mLatxa/train/configs/train_32B_cache.yaml \
+    --micro_batch_size 8 \
+    --packing true \
+    --num_train_epochs 4 \
+    --per_device_train_batch_size 8 \
+    --gradient_accumulation_steps 1 \
+    --cross_entropy_loss_fusion true \
+    --warmup_ratio 0.1 \
+    --weight_decay 0.1 \
+    --adam_beta1 0.9 \
+    --adam_beta2 0.95 \
+    --adam_epsilon 1e-8 \
+    --lr_scheduler_type cosine \
+    --learning_rate 0.00001 \
+    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --save_strategy steps \
+    --save_steps 200 \
+    --max_length 8192 \
+    --dataloader_num_workers 8 \
+    --dataset_num_proc 8 \
+    --save_total_limit 4 \
+    --gradient_checkpointing true \
+    --report_to wandb \
+    --logging_steps 5 \
+    --attn_impl flash_attention_2 \
+    --use_liger_kernel true
