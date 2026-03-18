@@ -1,16 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=16
+#SBATCH --nodes=32
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
-#SBATCH --qos=normal
-#SBATCH --output=logs/%j_normal.out
-#SBATCH --error=logs/%j_normal.err
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
 #SBATCH --exclusive
-
 # --- Environment Activation ---
 source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
 
@@ -82,6 +80,7 @@ echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $M
 
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
 srun accelerate launch \
     --num_processes $(( $NNODES * $GPUS_PER_NODE )) \
@@ -92,44 +91,42 @@ srun accelerate launch \
     --main_process_ip $MAIN_PROCESS_IP \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
-    /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/sft.py \
+    /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
     --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
-    --system "You are a helpful assistant." \
-    --model_author swift \
-    --freeze_llm false \
-    --freeze_vit true \
-    --freeze_aligner false \
-    --average_tokens_across_devices true \
-    --save_safetensors true \
-    --model_name swift-bot \
-    --train_type full \
-    --torch_dtype bfloat16 \
+    --mcore_model /leonardo_work/AIFAC_5C0_261/multimodalModels/v28-20260306-092606/checkpoint-1950 \
     --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --finetune false \
     --load_from_cache_file true \
-    --split_dataset_ratio 0 \
-    --deepspeed /leonardo/home/userexternal/laranaga/mLatxa/train/configs/train_32B_cache.yaml \
-    --micro_batch_size 8 \
+    --split_dataset_ratio 0.01 \
+    --tensor_model_parallel_size 4 \
+    --pipeline_model_parallel_size 1 \
+    --micro_batch_size 4 \
     --packing true \
+    --global_batch_size 512 \
+    --recompute_granularity full \
+    --recompute_method uniform \
+    --recompute_num_layers 1 \
     --num_train_epochs 4 \
-    --per_device_train_batch_size 8 \
-    --gradient_accumulation_steps 1 \
     --cross_entropy_loss_fusion true \
-    --warmup_ratio 0.1 \
-    --weight_decay 0.1 \
+    --lr 0.00001 \
+    --lr_warmup_fraction 0.05 \
     --adam_beta1 0.9 \
     --adam_beta2 0.95 \
-    --adam_epsilon 1e-8 \
-    --lr_scheduler_type cosine \
-    --learning_rate 0.00001 \
+    --adam_eps 1e-8 \
+    --lr_decay_style cosine \
+    --lr 0.00001 \
     --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
-    --save_strategy steps \
-    --save_steps 200 \
+    --save_steps 1 \
     --max_length 8192 \
     --dataloader_num_workers 8 \
     --dataset_num_proc 8 \
-    --save_total_limit 4 \
-    --gradient_checkpointing true \
-    --report_to wandb \
+    --sequence_parallel true \
+    --attention_backend flash \
+    --no_load_optim false \
+    --no_load_rng false \
+    --save_total_limit 2 \
+    --overlap_param_gather true \
+    --overlap_grad_reduce true \
     --logging_steps 5 \
-    --attn_impl flash_attention_2 \
-    --use_liger_kernel true
+    --no_save_optim false \
+    --dist_ckpt_save_pre_mcore_014 true

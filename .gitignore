@@ -210,3 +210,4 @@ err/
 out/
 *.jsonl
 logs/
+.slurm/

@@ -1,0 +1,53 @@
+# Use 'model' for the HF config/weights. If you manually converted weights,
+# you also need to use the 'load' parameter (see breakdown below).
+model: /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct
+save_safetensors: true
+model_name: swift-bot
+model_author: swift
+system: "You are a helpful assistant."
+
+# Qwen3-VL specific: use flash_attn for speed
+attn_impl: flash_attn               # FIXED: Was 'attention_backend'
+train_type: full
+torch_dtype: bfloat16
+
+# --- Megatron 3D Parallelism ---
+tensor_model_parallel_size: 4
+pipeline_model_parallel_size: 1
+sequence_parallel: true
+use_distributed_optimizer: true
+
+packing: true
+# padding_free: true                # REMOVED: Redundant/conflicting when packing is true in ms-swift
+max_length: 8192
+
+# Hyperparameters
+micro_batch_size: 4
+num_train_epochs: 4
+
+# Optimizer and Scheduler
+weight_decay: 0.1
+adam_beta1: 0.9
+adam_beta2: 0.95
+
+# Data Handling
+dataset: /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train # FIXED: Was 'cached_dataset'
+dataset_test_ratio: 0               # FIXED: Was 'split_dataset_ratio'
+dataset_num_proc: 16
+num_workers: 4                      # FIXED: Was 'dataloader_num_workers'
+# load_from_cache_file: true        # REMOVED: Native SWIFT caching handles this automatically
+
+freeze_llm: false
+freeze_vit: true
+freeze_aligner: false
+
+output_dir: /leonardo_work/AIFAC_5C0_261/multimodalModels_megatron
+save_strategy: steps
+save_steps: 100
+save_total_limit: 4
+report_to: wandb
+logging_steps: 5
+extra_megatron_kwargs: '{"cross_entropy_loss_fusion": true}' # FIXED: Raw Megatron args need this wrapper
+
+
+train_backend: megatron
