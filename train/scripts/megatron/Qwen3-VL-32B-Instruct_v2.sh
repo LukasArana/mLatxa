@@ -92,7 +92,6 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
-    --mcore_model /leonardo_work/AIFAC_5C0_261/multimodalModels/v31-20260309-211936/checkpoint-5750 \
     --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
     --save_safetensors true \
     --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \

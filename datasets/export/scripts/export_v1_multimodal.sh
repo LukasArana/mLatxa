@@ -1,5 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name=export_multimodal%A_%a
+#SBATCH --cpus-per-task=16
+#SBATCH --nodes=1
+#SBATCH --partition=boost_usr_prod
+#SBATCH --account=AIFAC_5C0_261
+#SBATCH --mem=60GB
+#SBATCH --output=/leonardo/home/userexternal/laranaga/mLatxa/datasets/export/log/log.out
+#SBATCH --error=/leonardo/home/userexternal/laranaga/mLatxa/datasets/export/log/log.err
+
+
 # 1. Activate environment
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9/bin/activate
+source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
 
 # 2. Create cache directories on the LARGE volume
 mkdir -p /leonardo_work/AIFAC_5C0_261/hf_cache
@@ -28,11 +39,11 @@ rm -rf ~/.cache/modelscope
 
 # 5. Run your export command
 swift export \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
-    --custom_dataset_info dataset_info.json \
-    --dataset aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi magpie_qwen magpie_llama \
+    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
+    --custom_dataset_info configs/v1_multimodal.json \
+    --dataset multimodal magpie_llama hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
     --template qwen \
     --max_length 8192 \
-    --dataset_num_proc 32 \
+    --dataset_num_proc 16 \
     --to_cached_dataset \
-    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train/
+    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1_debug/

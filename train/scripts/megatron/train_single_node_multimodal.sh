@@ -1,3 +1,4 @@
+
 #!/bin/bash
 #SBATCH --job-name=swift-single-node
 #SBATCH --nodes=1
@@ -39,9 +40,7 @@ export PYTORCH_ALLOC_CONF="expandable_segments:True"
 export SWIFT_PATCH_CONV3D=1
 
 
-# Qwen3-VL specific variables
-export video_min_token_num=0
-export video_max_token_num=0
+MAX_PIXELS=1003520
 
 nvidia-smi topo -m
 
@@ -57,36 +56,35 @@ MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
-torchrun \
-    --nproc_per_node=1 \
-    --nnodes=1 \
-    --node_rank=0 \
-    --master_addr=localhost \
-    --master_port=29500 \
-    /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
+SWIFT_USE_MCORE_GDN=1
+
+megatron sft \
     --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-0.8B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_debug/train \
     --load_from_cache_file true \
+    --add_non_thinking_prefix true \
+    --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 1 \
     --pipeline_model_parallel_size 1 \
     --micro_batch_size 1 \
     --global_batch_size 4 \
     --packing true \
+    --padding_free \
     --recompute_granularity full \
     --recompute_method uniform \
     --recompute_num_layers 1 \
     --num_train_epochs 1 \
-    --finetune false \
+    --finetune true \
     --cross_entropy_loss_fusion true \
-    --lr 0.00001 \
+    --lr 1e-5 \
     --lr_warmup_fraction 0.05 \
+    --min_lr 1e-6 \
     --adam_beta1 0.9 \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --lr 0.00001 \
     --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
@@ -105,3 +103,4 @@ torchrun \
     --freeze_llm true \
     --freeze_vit true \
     --freeze_aligner false
+
