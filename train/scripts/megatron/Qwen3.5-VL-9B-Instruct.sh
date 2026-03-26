@@ -57,8 +57,6 @@ export SWIFT_USE_MCORE_GDN=1
 nodes=($(scontrol show hostnames $SLURM_JOB_NODELIST))
 head_node=${nodes[0]}
 
-# Added -N 1 -n 1 for cleaner execution
-head_node_ip=$(srun -N 1 -n 1 -w $head_node hostname -I | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
 
 # CRITICAL FOR TORCHRUN: Force Gloo (the rendezvous backend) to use the InfiniBand interface
 export GLOO_SOCKET_IFNAME=ib0  # Change to eno1 if ib0 still times out
@@ -71,8 +69,6 @@ nvidia-smi topo -m
 MAX_PIXELS=1003520
 
 
-# --- Training Launch ---
-echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $MASTER_PORT"
 
 # For more information on multi-node training launch methods, refer to:
 # https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
@@ -91,7 +87,7 @@ srun accelerate launch \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
     --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1_debug/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v1/train \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -124,8 +120,8 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
-    --overlap_grad_reduce true \
+    --overlap_param_gather false \
+    --overlap_grad_reduce false \
     --logging_steps 5 \
     --no_save_optim false \
     --freeze_llm false \
