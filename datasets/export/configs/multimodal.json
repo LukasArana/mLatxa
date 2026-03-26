@@ -1,0 +1,46 @@
+[
+  {
+    "dataset_name": "multimodal",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/train.jsonl"
+  },
+  {
+    "dataset_name": "magpie_qwen",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
+    "columns": { "conversations": "conversations" }
+  },
+  {
+    "dataset_name": "hplt_v1",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "booktegi",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "cultura-x",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_culturax_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "egunkaria",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_egunkaria_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "wikipedia",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_wikipedia_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "euscrawl_v1.1",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_euscrawl-v1.1_train.jsonl",
+    "columns": { "prompt": "text" }
+  },
+  {
+    "dataset_name": "oscar",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_colossal-oscar_train.jsonl",
+    "columns": { "prompt": "text" }
+  }
+]

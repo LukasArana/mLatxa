@@ -29,7 +29,7 @@ rm -rf ~/.cache/modelscope
 # 5. Run your export command
 swift export \
     --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
-    --custom_dataset_info dataset_info.json \
+    --custom_dataset_info configs/v2.json \
     --dataset aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi magpie_qwen magpie_llama \
     --template qwen \
     --max_length 8192 \
