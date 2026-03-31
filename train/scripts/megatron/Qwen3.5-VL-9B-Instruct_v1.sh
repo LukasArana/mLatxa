@@ -3,7 +3,7 @@
 #SBATCH --nodes=16
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --time 00:30:00
+#SBATCH --time 24:00:00
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
 #SBATCH --output=logs/%j.out
@@ -87,12 +87,12 @@ srun accelerate launch \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
     --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v1/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1_debug/train/ \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
-    --tensor_model_parallel_size 2 \
+    --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
     --micro_batch_size 4 \
     --packing true \
