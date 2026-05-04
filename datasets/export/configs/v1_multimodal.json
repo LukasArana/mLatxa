@@ -1,7 +1,7 @@
 [
   {
     "dataset_name": "multimodal",
-    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/train.jsonl"
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/finevision_sampled.jsonl"
   },
   {
     "dataset_name": "magpie_qwen",
