@@ -38,7 +38,6 @@ export PYTORCH_ALLOC_CONF="expandable_segments:True"
 
 export SWIFT_PATCH_CONV3D=1
 
-
 # Qwen3-VL specific variables
 export video_min_token_num=0
 export video_max_token_num=0
@@ -58,7 +57,7 @@ MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
 megatron sft \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-0.8B \
+    --model $WORK/baseModels/gemma-4-E4B-it \
     --save_safetensors true \
     --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
     --load_from_cache_file true \
@@ -67,8 +66,8 @@ megatron sft \
     --pipeline_model_parallel_size 1 \
     --micro_batch_size 1 \
     --global_batch_size 4 \
-    --packing true \
     --recompute_granularity full \
+    --packing true \
     --recompute_method uniform \
     --recompute_num_layers 1 \
     --num_train_epochs 1 \
@@ -82,7 +81,7 @@ megatron sft \
     --lr_decay_style cosine \
     --lr 0.00001 \
     --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
-    --save_steps 250 \
+    --save_steps 1 \
     --max_length 8192 \
     --dataloader_num_workers 1 \
     --dataset_num_proc 1 \
@@ -95,7 +94,7 @@ megatron sft \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \
-    --dist_ckpt_save_pre_mcore_014 true \
     --freeze_llm true \
     --freeze_vit true \
-    --freeze_aligner false
+    --freeze_aligner false \
+    --dist_ckpt_optim_fully_reshardable
