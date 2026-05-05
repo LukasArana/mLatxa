@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=16
+#SBATCH --nodes=8
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
@@ -85,18 +85,18 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
+    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3.5-9B-Instruct \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1_debug/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
-    --tensor_model_parallel_size 2 \
+    --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
-    --micro_batch_size 4 \
+    --micro_batch_size 8 \
     --packing true \
-    --padding_free \
+    --padding_free true \
     --global_batch_size 512 \
     --recompute_granularity full \
     --recompute_method uniform \
@@ -113,19 +113,18 @@ srun accelerate launch \
     --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
-    --dataloader_num_workers 2 \
-    --dataset_num_proc 2 \
+    --dataloader_num_workers 8 \
+    --dataset_num_proc 8 \
     --sequence_parallel true \
     --attention_backend flash \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather false \
-    --overlap_grad_reduce false \
+    --overlap_param_gather true \
+    --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \
     --freeze_llm false \
     --freeze_vit true \
     --freeze_aligner false \
-    --dist_ckpt_save_pre_mcore_014 true \
-    --use_precision_aware_optimizer true
+    --dist_ckpt_optim_fully_reshardable
