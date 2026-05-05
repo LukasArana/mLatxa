@@ -28,6 +28,12 @@ from datasets import load_dataset
 from PIL import Image
 from tqdm import tqdm
 
+try:
+    import orjson
+    _HAS_ORJSON = True
+except ImportError:
+    _HAS_ORJSON = False
+
 
 # ---------------------------------------------------------------------------
 # Worker-process globals
@@ -123,47 +129,65 @@ def count_instruct_tokens(tokenizer_path: str, instruct_path: str, num_workers: 
 # Image helpers
 # ---------------------------------------------------------------------------
 
-def _open_image(img_data) -> Optional[Image.Image]:
-    """Accept PIL Image, bytes, or HF-style dict {bytes, path}. Returns PIL Image or None."""
-    if img_data is None:
-        return None
-    if isinstance(img_data, Image.Image):
-        return img_data
+_MAGIC_BYTES = (
+    (b'\xff\xd8\xff', "jpg"),
+    (b'\x89PNG\r\n\x1a\n', "png"),
+    (b'GIF87a', "gif"),
+    (b'GIF89a', "gif"),
+)
+
+
+def _sniff_ext(img_bytes: bytes) -> str:
+    for magic, ext in _MAGIC_BYTES:
+        if img_bytes.startswith(magic):
+            return ext
+    if len(img_bytes) > 12 and img_bytes[:4] == b'RIFF' and img_bytes[8:12] == b'WEBP':
+        return "webp"
+    return "jpg"
+
+
+def _save_and_open(img_data, images_dir: str, fallback_name: str, need_pil: bool):
+    """
+    Save image to disk and optionally return a PIL handle.
+    Returns (abs_path, PIL_image_or_None). When need_pil=False the PIL.open call
+    is skipped entirely (useful when no image-token counting is performed).
+    """
     if isinstance(img_data, dict):
         img_bytes = img_data.get("bytes")
-        if img_bytes is None:
-            return None
     elif isinstance(img_data, (bytes, bytearray)):
         img_bytes = img_data
-    else:
-        return None
-    try:
-        return Image.open(BytesIO(img_bytes))
-    except Exception:
-        return None
-
-
-def _save_image(img: Image.Image, img_data, images_dir: str, fallback_name: str) -> str:
-    """Save image to disk. Uses md5 name for byte data, fallback_name for PIL-only."""
-    if isinstance(img_data, dict):
-        img_bytes = img_data.get("bytes")
-    elif isinstance(img_data, (bytes, bytearray)):
-        img_bytes = img_data
-    else:
-        img_bytes = None
-
-    if img_bytes is not None:
-        digest = hashlib.md5(img_bytes).hexdigest()
-        fmt = (img.format or "JPEG").lower().replace("jpeg", "jpg")
-        filepath = os.path.join(images_dir, f"{digest}.{fmt}")
-        if not os.path.exists(filepath):
-            with open(filepath, "wb") as f:
-                f.write(img_bytes)
-    else:
+    elif isinstance(img_data, Image.Image):
         filepath = os.path.join(images_dir, fallback_name)
         if not os.path.exists(filepath):
-            img.save(filepath)
-    return os.path.abspath(filepath)
+            try:
+                img_data.save(filepath)
+            except Exception:
+                return None, None
+        return os.path.abspath(filepath), (img_data if need_pil else None)
+    else:
+        return None, None
+
+    if img_bytes is None:
+        return None, None
+
+    digest = hashlib.md5(img_bytes).hexdigest()
+    ext = _sniff_ext(img_bytes)
+    filepath = os.path.join(images_dir, f"{digest}.{ext}")
+    if not os.path.exists(filepath):
+        try:
+            with open(filepath, "wb") as f:
+                f.write(img_bytes)
+        except Exception:
+            return None, None
+
+    img = None
+    if need_pil:
+        try:
+            img = Image.open(BytesIO(img_bytes))
+        except Exception:
+            img = None
+
+    return os.path.abspath(filepath), img
 
 
 # ---------------------------------------------------------------------------
@@ -185,25 +209,9 @@ def _process_sample(args: Tuple) -> Tuple[List[Dict], int, int]:
     if not images_raw or not texts:
         return [], 0, 0
 
-    image_paths = []
-    sample_image_tokens = 0
-    for img_idx, img_data in enumerate(images_raw):
-        img = _open_image(img_data)
-        if img is None:
-            continue
-        fallback_name = f"sample_{global_idx:06d}_img_{img_idx}.png"
-        path = _save_image(img, img_data, _images_dir, fallback_name)
-        image_paths.append(path)
-        if _image_processor is not None:
-            sample_image_tokens += _count_image_tokens(_image_processor, img)
-
-    if not image_paths:
-        return [], 0, 0
-
-    image_prefix = "<image>" * len(image_paths)
-    records = []
+    # Filter texts first: if every pair is filtered out, skip image work entirely.
+    kept_pairs: List[Tuple[str, str]] = []
     text_tokens = 0
-
     for text_idx, text_pair in enumerate(texts):
         if not isinstance(text_pair, dict):
             continue
@@ -220,13 +228,37 @@ def _process_sample(args: Tuple) -> Tuple[List[Dict], int, int]:
         if _tokenizer is not None:
             text_tokens += _count_text_tokens(_tokenizer, user_text)
             text_tokens += _count_text_tokens(_tokenizer, assistant_text)
-        records.append({
+        kept_pairs.append((user_text, assistant_text))
+
+    if not kept_pairs:
+        return [], 0, 0
+
+    need_pil = _image_processor is not None
+    image_paths: List[str] = []
+    sample_image_tokens = 0
+    for img_idx, img_data in enumerate(images_raw):
+        fallback_name = f"sample_{global_idx:06d}_img_{img_idx}.png"
+        path, img = _save_and_open(img_data, _images_dir, fallback_name, need_pil)
+        if path is None:
+            continue
+        image_paths.append(path)
+        if need_pil and img is not None:
+            sample_image_tokens += _count_image_tokens(_image_processor, img)
+
+    if not image_paths:
+        return [], 0, 0
+
+    image_prefix = "<image>" * len(image_paths)
+    records = [
+        {
             "messages": [
-                {"role": "user", "content": f"{image_prefix}\n{user_text}"},
+                {"role": "user", "content": f"{image_prefix}{user_text}"},
                 {"role": "assistant", "content": assistant_text},
             ],
             "images": image_paths,
-        })
+        }
+        for user_text, assistant_text in kept_pairs
+    ]
 
     return records, text_tokens, sample_image_tokens
 
@@ -247,15 +279,15 @@ def _get_local_subsets(path: str) -> List[str]:
 
 
 def _parquet_iter(parquet_files: List[str]):
-    """Yield rows from local parquet files as plain dicts, bypassing datasets schema parsing."""
+    """Yield rows from local parquet files as plain dicts, streaming via iter_batches."""
     import pyarrow.parquet as pq
     for pf in parquet_files:
         try:
-            table = pq.read_table(pf)
-            d = table.to_pydict()
-            keys = list(d.keys())
-            for i in range(len(table)):
-                yield {k: d[k][i] for k in keys}
+            for batch in pq.ParquetFile(pf).iter_batches(batch_size=64):
+                d = batch.to_pydict()
+                keys = list(d.keys())
+                for i in range(batch.num_rows):
+                    yield {k: d[k][i] for k in keys}
         except Exception as e:
             tqdm.write(f"Warning: skipping {pf}: {e}")
 
@@ -352,51 +384,63 @@ def run_pipeline(
         initargs=(tokenizer_path, images_dir),
     )
 
+    all_records: List[Dict] = []
+    state = {"global_idx": 0, "tokens": 0}
+
+    def _sample_generator():
+        # Round-robin across subset iterators; stop generating once token target is reached.
+        while iterators:
+            if target_tokens is not None and state["tokens"] >= target_tokens:
+                return
+            subset_name, it = iterators.popleft()
+            try:
+                sample = next(it)
+                iterators.append((subset_name, it))
+                yield (sample, state["global_idx"], min_image_correspondence, min_visual_dependency)
+                state["global_idx"] += 1
+            except StopIteration:
+                tqdm.write(f"Subset '{subset_name}' exhausted")
+
+    early_break = False
     try:
-        with open(output_path, "w", encoding="utf-8") as f_out:
-            while iterators:
-                if target_tokens is not None and (total_text_tokens + total_image_tokens) >= target_tokens:
-                    break
-
-                # Collect one batch round-robin
-                batch: List[Tuple] = []
-                exhausted = []
-                while len(batch) < batch_size and iterators:
-                    subset_name, it = iterators.popleft()
-                    try:
-                        sample = next(it)
-                        iterators.append((subset_name, it))
-                        batch.append((sample, global_idx, min_image_correspondence, min_visual_dependency))
-                        global_idx += 1
-                    except StopIteration:
-                        tqdm.write(f"Subset '{subset_name}' exhausted")
-
-                if not batch:
-                    break
-
-                results = pool.map(_process_sample, batch)
-
-                for records, text_tok, img_tok in results:
-                    if target_tokens is not None and (total_text_tokens + total_image_tokens) >= target_tokens:
-                        break
-                    if not records:
-                        total_skipped += 1
-                        continue
-                    for rec in records:
-                        f_out.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                    total_written += len(records)
-                    prev_tokens = total_text_tokens + total_image_tokens
-                    total_text_tokens += text_tok
-                    total_image_tokens += img_tok
-                    if target_tokens is not None:
-                        pbar.update((total_text_tokens + total_image_tokens) - prev_tokens)
-                    else:
-                        pbar.update(len(records))
+        for records, text_tok, img_tok in pool.imap_unordered(
+            _process_sample, _sample_generator(), chunksize=4
+        ):
+            if target_tokens is not None and state["tokens"] >= target_tokens:
+                early_break = True
+                break
+            if not records:
+                total_skipped += 1
+                continue
+            all_records.extend(records)
+            total_written += len(records)
+            prev_tokens = state["tokens"]
+            total_text_tokens += text_tok
+            total_image_tokens += img_tok
+            state["tokens"] = total_text_tokens + total_image_tokens
+            if target_tokens is not None:
+                pbar.update(state["tokens"] - prev_tokens)
+            else:
+                pbar.update(len(records))
     finally:
-        pool.close()
+        if early_break:
+            pool.terminate()
+        else:
+            pool.close()
         pool.join()
 
     pbar.close()
+
+    print(f"\nWriting {len(all_records):,} records to {output_path}")
+    with open(output_path, "wb") as f_out:
+        if _HAS_ORJSON:
+            for rec in all_records:
+                f_out.write(orjson.dumps(rec))
+                f_out.write(b"\n")
+        else:
+            for rec in all_records:
+                f_out.write(json.dumps(rec, ensure_ascii=False).encode("utf-8"))
+                f_out.write(b"\n")
 
     # Summary
     total_tokens = total_text_tokens + total_image_tokens
