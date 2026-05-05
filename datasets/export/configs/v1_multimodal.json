@@ -1,7 +1,7 @@
 [
   {
     "dataset_name": "multimodal",
-    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/finevision_sampled.jsonl"
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/train_fixed.jsonl"
   },
   {
     "dataset_name": "magpie_qwen",
@@ -10,12 +10,11 @@
   },
   {
     "dataset_name": "hplt_v1",
-    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
-    "columns": { "prompt": "text" }
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl"
   },
   {
     "dataset_name": "booktegi",
-    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
+    "dataset_path": "/leonardo_work/AIFAC_5C0_261/datasets/datasets/PretrainDatasets/Latxa_booktegi_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {

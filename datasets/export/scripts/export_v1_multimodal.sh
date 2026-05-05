@@ -41,9 +41,9 @@ rm -rf ~/.cache/modelscope
 swift export \
     --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
     --custom_dataset_info configs/v1_multimodal.json \
-    --dataset multimodal magpie_llama hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
+    --dataset multimodal magpie_qwen hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
     --template qwen \
     --max_length 8192 \
-    --dataset_num_proc 16 \
+    --dataset_num_proc 32 \
     --to_cached_dataset \
-    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1_debug/
+    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/
