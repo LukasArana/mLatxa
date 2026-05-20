@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=8
+#SBATCH --nodes=16
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
@@ -32,13 +32,23 @@ export OMP_NUM_THREADS=4
 export NNODES=$SLURM_NNODES
 export GPUS_PER_NODE=4
 
+export MALLOC_ARENA_MAX=2
 # --- Network & Distributed Config (Leonardo Specifics) ---
 export PYTORCH_ALLOC_CONF="expandable_segments:True"
 
 # Prevent crashing when loading heavy multimodal datasets
-export NCCL_TIMEOUT=28800
-export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=28800
+# Lowered from 28800 -> 600 so the watchdog fires before manual scancel,
+# producing a real "rank X stuck in collective Y" line instead of silent hang.
+export NCCL_TIMEOUT=1800
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+
+# Diagnostic: surface NCCL hangs with a stack + flight-recorder dump
+export TORCH_NCCL_BLOCKING_WAIT=0
+export TORCH_NCCL_TRACE_BUFFER_SIZE=2000
+export TORCH_NCCL_DUMP_ON_TIMEOUT=1
+export NCCL_DEBUG=WARN
+export CUDA_LAUNCH_BLOCKING=0
 
 # Leonardo quirk: Prevent NICs from being used for inter-CPU communication
 export NCCL_NET_DISABLE_INTRA=1
@@ -49,13 +59,15 @@ export NCCL_IB_GID_INDEX=3
 export NCCL_NET_GDR_LEVEL=2
 
 export SWIFT_PATCH_CONV3D=1
+# Diagnostic: disabled to test whether MCore GDN compile path is the hang root.
+# Re-enable if removing it does not change the symptom.
 export SWIFT_USE_MCORE_GDN=1
-
-
 
 # Get the Master Node's IP address directly (fixes hostname resolution issues in torchrun)
 nodes=($(scontrol show hostnames $SLURM_JOB_NODELIST))
 head_node=${nodes[0]}
+
+export SKIP_MULTIMODAL_MTP_VALIDATION=1
 
 
 # CRITICAL FOR TORCHRUN: Force Gloo (the rendezvous backend) to use the InfiniBand interface
@@ -65,16 +77,12 @@ export GLOO_SOCKET_IFNAME=ib0  # Change to eno1 if ib0 still times out
 export video_min_token_num=0
 export video_max_token_num=0
 
+export USE_MCORE_GDN=1
 nvidia-smi topo -m
-MAX_PIXELS=1003520
-
-
-
-# For more information on multi-node training launch methods, refer to:
-# https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
 
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+IMAGE_MAX_TOKEN_NUM=128 \
 srun accelerate launch \
     --num_processes $(( $NNODES * $GPUS_PER_NODE )) \
     --num_machines $NNODES \
@@ -94,19 +102,21 @@ srun accelerate launch \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
-    --micro_batch_size 8 \
+    --torch_dtype bfloat16 \
+    --micro_batch_size 1 \
     --packing true \
     --padding_free true \
     --global_batch_size 512 \
     --recompute_granularity full \
-    --recompute_method uniform \
     --recompute_num_layers 1 \
-    --num_train_epochs 2 \
+    --recompute_method uniform \
+    --num_train_epochs 1 \
     --finetune false \
     --cross_entropy_loss_fusion true \
     --lr 0.00001 \
     --lr_warmup_fraction 0.05 \
     --adam_beta1 0.9 \
+    --use_distributed_optimizer \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
@@ -120,11 +130,12 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
-    --overlap_grad_reduce true \
+    --overlap_param_gather false \
+    --overlap_grad_reduce false \
     --logging_steps 5 \
     --no_save_optim false \
     --freeze_llm false \
     --freeze_vit true \
     --freeze_aligner false \
-    --dist_ckpt_optim_fully_reshardable
+    --optimizer_cpu_offload true \
+    --use_precision_aware_optimizer true \
