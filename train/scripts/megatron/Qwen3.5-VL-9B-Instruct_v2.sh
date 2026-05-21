@@ -32,6 +32,9 @@ export OMP_NUM_THREADS=16
 export NNODES=$SLURM_NNODES
 export GPUS_PER_NODE=4
 
+export TRITON_CACHE_DIR="/leonardo_work/AIFAC_5C0_261/triton_cache"
+mkdir -p $TRITON_CACHE_DIR
+
 # --- Network & Distributed Config (Leonardo Specifics) ---
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
@@ -68,7 +71,6 @@ export video_min_token_num=0
 export video_max_token_num=0
 
 nvidia-smi topo -m
-
 export MASTER_PORT=9327
 export MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 
@@ -89,8 +91,7 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3.5-9B-Instruct \
-    --mcore_model /leonardo_work/AIFAC_5C0_261/multimodalModels/v59-20260429-184127/checkpoint-7250 \
+    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
     --save_safetensors true \
     --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v2/qwen32b/train \
     --load_from_cache_file true \
@@ -130,4 +131,5 @@ srun accelerate launch \
     --freeze_llm false \
     --freeze_vit true \
     --freeze_aligner false \
+    ----recompute_modules core_attn mlp \
     --dist_ckpt_optim_fully_reshardable

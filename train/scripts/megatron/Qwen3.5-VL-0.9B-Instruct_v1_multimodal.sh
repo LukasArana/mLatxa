@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=16
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --time 24:00:00
+#SBATCH --time 00:30:00
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
+#SBATCH --qos=boost_qos_dbg
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -51,8 +52,6 @@ export NCCL_NET_GDR_LEVEL=2
 export SWIFT_PATCH_CONV3D=1
 export SWIFT_USE_MCORE_GDN=1
 
-
-
 # Get the Master Node's IP address directly (fixes hostname resolution issues in torchrun)
 nodes=($(scontrol show hostnames $SLURM_JOB_NODELIST))
 head_node=${nodes[0]}
@@ -64,16 +63,13 @@ export GLOO_SOCKET_IFNAME=ib0  # Change to eno1 if ib0 still times out
 # Qwen3-VL specific variables
 export video_min_token_num=0
 export video_max_token_num=0
-export MAX_PIXELS=1003520
 
 nvidia-smi topo -m
-
-
-# For more information on multi-node training launch methods, refer to:
-# https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
+export MAX_PIXELS=65536
 
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+
 srun accelerate launch \
     --num_processes $(( $NNODES * $GPUS_PER_NODE )) \
     --num_machines $NNODES \
@@ -84,28 +80,30 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
+    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3.5-9B-Instruct \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v1/train/ \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
-    --micro_batch_size 8 \
-    --packing true \
-    --padding_free true \
+    --torch_dtype bfloat16 \
+    --micro_batch_size 1 \
+    --packing false \
+    --padding_free false \
     --global_batch_size 512 \
     --recompute_granularity full \
-    --recompute_method uniform \
     --recompute_num_layers 1 \
-    --num_train_epochs 2 \
+    --recompute_method uniform \
+    --num_train_epochs 1 \
     --finetune false \
     --cross_entropy_loss_fusion true \
     --lr 0.00001 \
     --lr_warmup_fraction 0.05 \
     --adam_beta1 0.9 \
+    --use_distributed_optimizer \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
@@ -119,11 +117,12 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
-    --overlap_grad_reduce true \
+    --overlap_param_gather false \
+    --overlap_grad_reduce false \
     --logging_steps 5 \
     --no_save_optim false \
-    --freeze_llm false \
+    --freeze_llm true \
     --freeze_vit true \
     --freeze_aligner false \
-    --dist_ckpt_optim_fully_reshardable
+    --optimizer_cpu_offload true \
+    --use_precision_aware_optimizer true \

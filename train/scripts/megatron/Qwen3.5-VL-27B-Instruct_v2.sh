@@ -32,13 +32,23 @@ export OMP_NUM_THREADS=16
 export NNODES=$SLURM_NNODES
 export GPUS_PER_NODE=4
 
+# Diagnostic: surface NCCL hangs with a stack + flight-recorder dump
+export TORCH_NCCL_BLOCKING_WAIT=0
+export TORCH_NCCL_TRACE_BUFFER_SIZE=2000
+export TORCH_NCCL_DUMP_ON_TIMEOUT=1
+export NCCL_DEBUG=WARN
+export CUDA_LAUNCH_BLOCKING=0
+
+
 # --- Network & Distributed Config (Leonardo Specifics) ---
-export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+export PYTORCH_ALLOC_CONF="expandable_segments:True"
 
 # Prevent crashing when loading heavy multimodal datasets
-export NCCL_TIMEOUT=28800
-export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=28800
+export NCCL_TIMEOUT=3600
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=3600
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+
+export GLOO_TIMEOUT_SECONDS=1800  # 30 minutes for large multi-node setup
 
 # Leonardo quirk: Prevent NICs from being used for inter-CPU communication
 export NCCL_NET_DISABLE_INTRA=1
@@ -67,6 +77,9 @@ export GLOO_SOCKET_IFNAME=ib0  # Change to eno1 if ib0 still times out
 export video_min_token_num=0
 export video_max_token_num=0
 
+export IMAGE_MAX_TOKEN_NUM=0
+
+
 nvidia-smi topo -m
 
 export MASTER_PORT=9327
@@ -76,8 +89,6 @@ export MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1
 # --- Training Launch ---
 echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $MASTER_PORT"
 
-# For more information on multi-node training launch methods, refer to:
-# https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
 
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
@@ -92,14 +103,15 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     /leonardo/home/userexternal/laranaga/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
+    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-27B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v2/qwen32b/train/ \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
+    --add_non_thinking_prefix true \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
-    --micro_batch_size 4 \
+    --micro_batch_size 2 \
     --packing true \
     --global_batch_size 512 \
     --recompute_granularity full \
@@ -111,10 +123,10 @@ srun accelerate launch \
     --lr 0.00001 \
     --lr_warmup_fraction 0.05 \
     --adam_beta1 0.9 \
+    --loss_scale ignore_empty_think \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --lr 0.00001 \
     --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
@@ -124,12 +136,15 @@ srun accelerate launch \
     --attention_backend flash \
     --no_load_optim false \
     --no_load_rng false \
-    --save_total_limit 2 \
-    --overlap_param_gather true \
-    --overlap_grad_reduce true \
+    --save_total_limit 8 \
+    --overlap_param_gather false \
+    --overlap_grad_reduce false \
     --logging_steps 5 \
     --no_save_optim false \
     --freeze_llm false \
     --freeze_vit true \
     --freeze_aligner false \
-    --dist_ckpt_optim_fully_reshardable
+    --padding_free true \
+    --use_distributed_optimizer \
+    --use_precision_aware_optimizer true \
+    --optimizer_cpu_offload true

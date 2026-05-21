@@ -61,7 +61,7 @@ SWIFT_USE_MCORE_GDN=1
 megatron sft \
     --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-0.8B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_debug/train \
+    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -99,7 +99,6 @@ megatron sft \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \
-    --dist_ckpt_save_pre_mcore_014 true \
     --freeze_llm true \
     --freeze_vit true \
     --freeze_aligner false
