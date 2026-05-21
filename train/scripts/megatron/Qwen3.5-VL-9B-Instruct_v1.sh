@@ -69,7 +69,6 @@ export MAX_PIXELS=1003520
 nvidia-smi topo -m
 
 
-
 # For more information on multi-node training launch methods, refer to:
 # https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
 
