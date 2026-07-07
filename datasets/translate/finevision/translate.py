@@ -11,28 +11,51 @@ from typing import List, Tuple
 # -----------------------------------------------------------------------------
 MODEL = "HiTZ/Latxa-Llama-3.1-70B-Instruct"
 TENSOR_PARALLEL_SIZE = 4          # Leonardo Booster node = 4 GPUs
-MAX_MODEL_LEN = 4096
-MAX_NUM_SEQS = 256
+MAX_MODEL_LEN = 8192
+MAX_NUM_SEQS = 64                 # vLLM batch size: max sequences processed per step
 GPU_MEMORY_UTILIZATION = 0.90
 DTYPE = "bfloat16"
 SEED = 0
 IMAGE_TOKEN = "<image>"
 
-SYSTEM_PROMPT = (
-    "You are a professional translator. Translate the user's text from English "
-    "into Basque. Output ONLY the translation, with no explanations, notes, "
-    "labels or surrounding quotation marks. Preserve numbers, symbols, line "
-    "breaks, punctuation, LaTeX and any code exactly as they appear."
-)
-
-# Two few-shot examples (FineVision-style VQA) so the model emits ONLY the
-# translation and nothing else.
-FEWSHOT = [
-    ("Subtract 0 red cylinders. How many objects are left?",
-     "Kendu 0 zilindro gorri. Zenbat objektu geratzen dira?"),
-    ("What is the color of the large metallic sphere on the right?",
-     "Zer kolore du eskuineko esfera metaliko handiak?"),
-]
+LANGUAGE_CONFIG = {
+    "eu": {
+        "name": "Basque",
+        "fewshot": [
+            ("Subtract 0 red cylinders. How many objects are left?",
+             "Kendu 0 zilindro gorri. Zenbat objektu geratzen dira?"),
+            ("What is the color of the large metallic sphere on the right?",
+             "Zer kolore du eskuineko esfera metaliko handiak?"),
+        ],
+    },
+    "cat": {
+        "name": "Catalan",
+        "fewshot": [
+            ("Subtract 0 red cylinders. How many objects are left?",
+             "Resta 0 cilindres vermells. Quants objectes queden?"),
+            ("What is the color of the large metallic sphere on the right?",
+             "De quin color es la gran esfera metàl·lica de la dreta?"),
+        ],
+    },
+    "gal": {
+        "name": "Galician",
+        "fewshot": [
+            ("Subtract 0 red cylinders. How many objects are left?",
+             "Resta 0 cilindros vermellos. Cantos obxectos quedan?"),
+            ("What is the color of the large metallic sphere on the right?",
+             "Cal é a cor da gran esfera metálica da dereita?"),
+        ],
+    },
+    "nor": {
+        "name": "Norwegian",
+        "fewshot": [
+            ("Subtract 0 red cylinders. How many objects are left?",
+             "Trekk fra 0 røde sylindre. Hvor mange objekter er igjen?"),
+            ("What is the color of the large metallic sphere on the right?",
+             "Hvilken farge har den store metalliske kulen til høyre?"),
+        ],
+    },
+}
 
 _NUMERIC_ONLY = re.compile(r"^[\s\d.,;:%+\-*/()=\[\]<>]*$")
 
@@ -45,12 +68,14 @@ def parse_args() -> argparse.Namespace:
                    help="Path to the input data. Either a JSON array (one big list) "
                         "or JSONL (one JSON object per line).")
     p.add_argument("--output-dir", required=True, help="Directory for per-job output files.")
-    p.add_argument("--samples-per-job", type=int, default=20000,
-                   help="Number of input lines each job translates.")
-    p.add_argument("--job-index", type=int, default=None,
-                   help="0-based job index. Defaults to $SLURM_ARRAY_TASK_ID.")
+    p.add_argument("--start", type=int, default=None,
+                   help="0-based start index (inclusive) of the dataset slice this job translates.")
+    p.add_argument("--end", type=int, default=None,
+                   help="End index (exclusive) of the dataset slice this job translates.")
     p.add_argument("--resume", action="store_true",
                    help="Skip the job if its output file is already complete.")
+    p.add_argument("--language", type=str, default="eu",
+                   help="Target language code (e.g., eu, cat, gal, nor).")
 
     # vLLM / model config (defaults come from the constants above).
     p.add_argument("--model", default=MODEL,
@@ -99,12 +124,12 @@ def clean_translation(raw: str) -> str:
         t = t[1:-1].strip()
     return t
 
-def build_messages(text: str) -> List[dict]:
+def build_messages(text: str, system_prompt: str, fewshot: List[Tuple[str, str]]) -> List[dict]:
     """Translation prompt with two few-shot turns (Llama-3 chat format)."""
-    msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for en, eu in FEWSHOT:
-        msgs.append({"role": "user", "content": en})
-        msgs.append({"role": "assistant", "content": eu})
+    msgs = [{"role": "system", "content": system_prompt}]
+    for source_text, target_text in fewshot:
+        msgs.append({"role": "user", "content": source_text})
+        msgs.append({"role": "assistant", "content": target_text})
     msgs.append({"role": "user", "content": text})
     return msgs
 
@@ -147,25 +172,38 @@ def read_slice(path: str, start: int, end: int) -> List[dict]:
 
 def main() -> None:
     args = parse_args()
+    language_config = LANGUAGE_CONFIG.get(args.language)
+    if language_config is None:
+        supported = ", ".join(sorted(LANGUAGE_CONFIG))
+        sys.exit(f"ERROR: unsupported --language '{args.language}'. Supported: {supported}")
 
-    job_index = args.job_index
-    if job_index is None:
-        env = os.environ.get("SLURM_ARRAY_TASK_ID")
-        if env is None:
-            sys.exit("ERROR: provide --job-index or run under a SLURM array ($SLURM_ARRAY_TASK_ID).")
-        job_index = int(env)
+    SYSTEM_PROMPT = (
+        "You are a professional translator. Translate the user's text from English "
+        f"to {language_config['name']}. Output ONLY the translation, with no explanations, notes, "
+        "labels or surrounding quotation marks. Preserve numbers, symbols, line "
+        "breaks, punctuation, LaTeX and any code exactly as they appear."
+    )
+    fewshot = language_config["fewshot"]
 
-    start = job_index * args.samples_per_job
-    end = start + args.samples_per_job
+    if args.start is None or args.end is None:
+        sys.exit("ERROR: --start and --end must be given together.")
+    start, end = args.start, args.end
+
+    #if end == -1, "all remaining"
+    if end == -1:
+        with open(args.input, "r", encoding="utf-8") as f:
+            data = [json.loads(i) for i in f]
+            end = len(data)
+    label = f"{start}-{end}"
 
     os.makedirs(args.output_dir, exist_ok=True)
-    out_path = os.path.join(args.output_dir, f"translated_{job_index:06d}.jsonl")
+    out_path = os.path.join(args.output_dir, f"translated_{args.language}_{start:09d}_{end:09d}.jsonl")
     tmp_path = out_path + ".tmp"
 
     samples = read_slice(args.input, start, end)
 
     if not samples:
-        print(f"[job {job_index}] no samples in range [{start}, {end}); nothing to do.", flush=True)
+        print(f"[{label}] no samples in range [{start}, {end}); nothing to do.", flush=True)
         open(out_path, "a", encoding="utf-8").close()  # touch for consistent merges/--resume
         return
 
@@ -173,11 +211,11 @@ def main() -> None:
         with open(out_path, "r", encoding="utf-8") as f:
             done = sum(1 for _ in f)
         if done == len(samples):
-            print(f"[job {job_index}] already complete ({done} lines); skipping.", flush=True)
+            print(f"[{label}] already complete ({done} lines); skipping.", flush=True)
             return
-        print(f"[job {job_index}] incomplete output ({done}/{len(samples)}); recomputing.", flush=True)
+        print(f"[{label}] incomplete output ({done}/{len(samples)}); recomputing.", flush=True)
 
-    print(f"[job {job_index}] lines [{start}, {start + len(samples)}) -> {out_path}", flush=True)
+    print(f"[{label}] lines [{start}, {start + len(samples)}) -> {out_path}", flush=True)
 
     seg_store: List[List[List[str]]] = []
     todo_refs: List[Tuple[int, int, int]] = []
@@ -195,7 +233,7 @@ def main() -> None:
                 todo_texts.append(seg)
         seg_store.append(per_sample)
 
-    print(f"[job {job_index}] {len(todo_texts)} segments across {len(samples)} samples.", flush=True)
+    print(f"[{label}] {len(todo_texts)} segments across {len(samples)} samples.", flush=True)
 
     # --- deduplicate -----------------------------------------------------------
     text_to_uid: dict = {}
@@ -209,7 +247,7 @@ def main() -> None:
             unique_texts.append(t)
         ref_uid.append(uid)
     if todo_texts:
-        print(f"[job {job_index}] dedup: {len(unique_texts)} unique / {len(todo_texts)} total "
+        print(f"[{label}] dedup: {len(unique_texts)} unique / {len(todo_texts)} total "
               f"({100 * (1 - len(unique_texts) / len(todo_texts)):.1f}% saved).", flush=True)
 
     # --- load model & translate ------------------------------------------------
@@ -230,20 +268,19 @@ def main() -> None:
             trust_remote_code=True,
         )
 
-        print(f"[job {job_index}] model loaded in {time.time() - t0:.0f}s.", flush=True)
+        print(f"[{label}] model loaded in {time.time() - t0:.0f}s.", flush=True)
 
         sampling = SamplingParams(
             temperature=args.temperature,
             top_p=args.top_p,
             max_tokens=args.max_tokens,
         )
-        conversations = [build_messages(t) for t in unique_texts]
+        conversations = [build_messages(t, SYSTEM_PROMPT, fewshot) for t in unique_texts]
 
         t0 = time.time()
-        breakpoint()
-        outputs = llm.chat(conversations, sampling, use_tqdm=True)
+        outputs = llm.chat(conversations, sampling, use_tqdm=True, chat_template_kwargs={"enable_thinking": False})
         dt = time.time() - t0
-        print(f"[job {job_index}] translated {len(unique_texts)} strings in {dt:.0f}s "
+        print(f"[{label}] translated {len(unique_texts)} strings in {dt:.0f}s "
               f"({len(unique_texts) / max(dt, 1e-9):.1f} str/s).", flush=True)
 
         for uid, out in enumerate(outputs):
@@ -262,7 +299,7 @@ def main() -> None:
             n_written += 1
     os.replace(tmp_path, out_path)  # atomic: never leave a half-written file
 
-    print(f"[job {job_index}] DONE: wrote {n_written} samples -> {out_path}", flush=True)
+    print(f"[{label}] DONE: wrote {n_written} samples -> {out_path}", flush=True)
 
 
 if __name__ == "__main__":
