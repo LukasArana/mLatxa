@@ -10,28 +10,28 @@
 
 
 # 1. Activate environment
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # 2. Create cache directories on the LARGE volume
-mkdir -p /leonardo_work/AIFAC_5C0_261/hf_cache
-mkdir -p /leonardo_work/AIFAC_5C0_261/modelscope_cache
-mkdir -p /leonardo_work/AIFAC_5C0_261/tmp
+mkdir -p $WORK/hf_cache
+mkdir -p $WORK/modelscope_cache
+mkdir -p $WORK/tmp
 
 # 3. Set Environment Variables (CRITICAL)
 # Hugging Face Cache
-export HF_DATASETS_CACHE="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
+export HF_DATASETS_CACHE="$WORK/hf_cache"
+export HF_HOME="$WORK/hf_cache"
 
 # ModelScope Cache (Specific to ms-swift)
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
 
 # System Temp Directory
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
+export TMPDIR="$WORK/tmp"
 
 #WANBD
 export WANDB_PROJECT="qwen3-vl-finetuning"
 export WANDB_ENTITY="USER"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 mkdir -p $WANDB_DIR
 # 4. Clean existing small caches (Free up space if root disk is already full)
 rm -rf ~/.cache/huggingface
@@ -39,11 +39,11 @@ rm -rf ~/.cache/modelscope
 
 # 5. Run your export command
 swift export \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
+    --model $WORK/baseModels/Qwen3.5-9B \
     --custom_dataset_info configs/v1.json \
     --dataset magpie_qwen hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
     --template qwen \
     --max_length 8192 \
     --dataset_num_proc 32 \
     --to_cached_dataset \
-    --output_dir /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v1/
+    --output_dir $WORK/datasets/train/preprocessed/v1/
