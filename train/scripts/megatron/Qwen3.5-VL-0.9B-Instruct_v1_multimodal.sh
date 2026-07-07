@@ -3,7 +3,7 @@
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --time 00:30:00
+#SBATCH --time 24:00:00
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
 #SBATCH --qos=boost_qos_dbg
@@ -12,13 +12,13 @@
 #SBATCH --exclusive
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
@@ -82,7 +82,7 @@ srun accelerate launch \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
     --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3.5-9B-Instruct \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1/train \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -107,7 +107,7 @@ srun accelerate launch \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
     --dataloader_num_workers 8 \

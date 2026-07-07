@@ -12,13 +12,13 @@
 #SBATCH --exclusive
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
@@ -93,7 +93,7 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     $HOME/ms-swift/swift/cli/sft.py \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
+    --model $WORK/baseModels/Qwen3-2B/ \
     --system "You are a helpful assistant." \
     --model_author swift \
     --freeze_llm false \
@@ -104,7 +104,7 @@ srun accelerate launch \
     --model_name swift-bot \
     --train_type full \
     --torch_dtype bfloat16 \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train \
     --load_from_cache_file true \
     --split_dataset_ratio 0 \
     --deepspeed $HOME/mLatxa/train/configs/train_32B_cache.yaml \
@@ -121,7 +121,7 @@ srun accelerate launch \
     --adam_epsilon 1e-8 \
     --lr_scheduler_type cosine \
     --learning_rate 0.00001 \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels \
     --save_strategy steps \
     --save_steps 200 \
     --max_length 8192 \
