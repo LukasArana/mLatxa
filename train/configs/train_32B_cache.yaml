@@ -28,7 +28,7 @@ learning_rate: 0.00001
 
 # Should be 10813318240 llama tokens. It is 8187712460 qwen tokens
 # Data Handling
-cached_dataset: /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train
+cached_dataset: $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train
 split_dataset_ratio: 0
 dataset_num_proc: 16
 dataloader_num_workers: 4
@@ -39,7 +39,7 @@ freeze_vit: true
 freeze_aligner: false
 average_tokens_across_devices: true
 
-output_dir: /leonardo_work/AIFAC_5C0_261/multimodalModels
+output_dir: $WORK/multimodalModels
 save_strategy: steps
 save_steps: 100
 save_total_limit: 4

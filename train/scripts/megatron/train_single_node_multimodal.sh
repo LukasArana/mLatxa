@@ -40,12 +40,10 @@ export PYTORCH_ALLOC_CONF="expandable_segments:True"
 export SWIFT_PATCH_CONV3D=1
 
 
-MAX_PIXELS=1003520
 
 nvidia-smi topo -m
 export video_max_token_num=0
 export video_max_token_num=0
-export IMAGE_MAX_TOKEN_NUM=200
 export FPS_MIN_FRAMES=0
 
 
@@ -59,12 +57,13 @@ MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
-SWIFT_USE_MCORE_GDN=1 # 117571, 117571
-IMAGE_MAX_TOKEN_NUM=200 \
+SWIFT_USE_MCORE_GDN=1 # 117571, 117571, 220918
+export IMAGE_MAX_TOKEN_NUM=400 #
+IMAGE_MAX_TOKEN_NUM=400 \
 megatron sft \
     --model $WORK/baseModels/Qwen3.5-0.8B \
     --save_safetensors true \
-    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1/train/ \
+    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_eu_512/train/ \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \

@@ -118,8 +118,8 @@ srun accelerate launch \
     --output_dir $WORK/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
-    --dataloader_num_workers 2 \
-    --dataset_num_proc 2 \
+    --dataloader_num_workers 4 \
+    --dataset_num_proc 4 \
     --sequence_parallel true \
     --attention_backend flash \
     --no_load_optim false \
@@ -127,11 +127,8 @@ srun accelerate launch \
     --save_total_limit 2 \
     --overlap_param_gather false \
     --overlap_grad_reduce false \
-    --logging_steps 5 \
+    --logging_steps 10 \
     --no_save_optim false \
     --freeze_llm false \
     --freeze_vit true \
-    --freeze_aligner false \
-    --use_distributed_optimizer \
-    --optimizer_cpu_offload true \
-    --use_precision_aware_optimizer true
+    --freeze_aligner false
