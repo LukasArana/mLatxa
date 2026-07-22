@@ -18,7 +18,7 @@ mkdir -p logs
 
 # Activate environment if needed
 
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 cd $HOME/mLatxa/datasets
 
@@ -29,8 +29,8 @@ echo "CPUs: $SLURM_CPUS_PER_TASK"
 echo "Time: $(date)"
 
 python sample_finevision.py \
-    --finevision_path /leonardo_work/AIFAC_5C0_261/datasets/train/finevision \
-    --instruct_path /leonardo_work/AIFAC_5C0_261/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl \
+    --finevision_path $WORK/datasets/train/finevision \
+    --instruct_path $WORK/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl \
     --tokenizer_path $WORK/baseModels/Qwen3.5-9B \
     --output_path $WORK/datasets/finevision_sampled.jsonl \
     --num_workers 32 \
