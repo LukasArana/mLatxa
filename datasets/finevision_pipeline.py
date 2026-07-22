@@ -339,6 +339,7 @@ def run_pipeline(
     tokenizer_path: Optional[str],
     target_tokens: Optional[int],
     instruct_path: Optional[str],
+    token_multiplier: Optional[float],
     min_image_correspondence: int,
     min_visual_dependency: int,
     batch_size: int,
@@ -353,6 +354,8 @@ def run_pipeline(
     # Step 1: resolve target token count
     if tokenizer_path and instruct_path and target_tokens is None:
         target_tokens = count_instruct_tokens(tokenizer_path, instruct_path, num_workers)
+        if token_multiplier is not None:
+            target_tokens = int(target_tokens * token_multiplier)
         print(f"Target token count from Instruct dataset: {target_tokens:,}")
     elif target_tokens is not None:
         print(f"Using provided target token count: {target_tokens:,}")
@@ -486,22 +489,22 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="FineVision pipeline: HF streaming → quality filter → MS-Swift JSONL"
     )
-    parser.add_argument("--dataset_name", type=str, default="/leonardo_work/AIFAC_5C0_261/datasets/train/finevision",
+    parser.add_argument("--dataset_name", type=str, default="$WORK/datasets/train/finevision",
         help="HuggingFace dataset name")
     parser.add_argument("--split", type=str, default="train")
     parser.add_argument("--subset", type=str, default=None,
         help="Load only this subset/config; by default all non-text subsets are loaded round-robin")
     parser.add_argument("--output_path", type=str,
-        default="/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/train.jsonl",
+        default="$WORK/datasets/train/finevisionProcessed/train.jsonl",
         help="Output JSONL path")
     parser.add_argument("--images_dir", type=str,
-        default="/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/images",
+        default="$WORK/datasets/train/finevisionProcessed/images",
         help="Directory to save extracted images")
-    parser.add_argument("--tokenizer_path", type=str, default="/leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B",
+    parser.add_argument("--tokenizer_path", type=str, default="$WORK/baseModels/Qwen3.5-9B",
         help="Path to tokenizer; enables token counting (required for --target_tokens / --instruct_path)")
     parser.add_argument("--target_tokens", type=int, default=None,
         help="Stop after accumulating N tokens (requires --tokenizer_path)")
-    parser.add_argument("--instruct_path", type=str, default="/leonardo_work/AIFAC_5C0_261/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
+    parser.add_argument("--instruct_path", type=str, default="$WORK/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
         help="Count tokens from this JSONL to set target_tokens (requires --tokenizer_path)")
     parser.add_argument("--min_image_correspondence", type=int, default=0,
         help="Minimum image_correspondence_rating to include a text pair")
@@ -511,6 +514,8 @@ def parse_args():
         help="Batch size for tqdm progress reporting (unused in processing)")
     parser.add_argument("--num_workers", type=int, default=max(1, mp.cpu_count() - 1),
         help="Number of workers for instruct dataset token counting")
+    parser.add_argument("--token_multiplier", type=float, default=None,
+        help="Optional multiplier for target_tokens when counting from instruct_path")
     parser.add_argument("--seed", type=int, default=42)
     return parser.parse_args()
 
@@ -536,6 +541,7 @@ def main():
         min_visual_dependency=args.min_visual_dependency,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
+        token_multiplier=args.token_multiplier,
         seed=args.seed,
     )
 
