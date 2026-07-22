@@ -79,7 +79,6 @@ export video_min_token_num=0
 export video_max_token_num=0
 export FPS_MIN_FRAMES=0
 
-export USE_MCORE_GDN=1
 nvidia-smi topo -m
 export IMAGE_MAX_TOKEN_NUM=256
 
@@ -100,7 +99,6 @@ srun accelerate launch \
     --model $WORK/baseModels/Qwen3.5-9B \
     --save_safetensors false \
     --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_eu_256/train/ \
-    --mcore_model /leonardo_work/AIFAC_5C0_261/multimodalModels/v271-20260710-225833/checkpoint-250 \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -134,7 +132,7 @@ srun accelerate launch \
     --no_load_rng false \
     --save_total_limit 2 \
     --overlap_param_gather false \
-    --overlap_grad_reduce false \
+    --overlap_grad_reduce true \
     --logging_steps 10 \
     --no_save_optim false \
     --freeze_llm false \

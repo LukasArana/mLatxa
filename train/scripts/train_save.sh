@@ -125,7 +125,7 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
+    --overlap_param_gather false \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \

@@ -97,7 +97,6 @@ export IMAGE_MAX_TOKEN_NUM=0
 
 # InfiniBand setups for Leonardo Boost
 export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3
-export NCCL_IB_GID_INDEX=3
 export NCCL_NET_GDR_LEVEL=2
 
 export SWIFT_PATCH_CONV3D=1
@@ -131,7 +130,7 @@ srun accelerate launch \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
     --model $WORK/baseModels/Qwen3.5-27B \
     --save_safetensors false \
-    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_eu_en_1024/train/ \
+    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v2_eu_en_124/train/ \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
     --add_non_thinking_prefix true \

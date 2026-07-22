@@ -80,6 +80,7 @@ export video_min_token_num=0
 export video_max_token_num=0
 export FPS_MIN_FRAMES=0
 
+export IMAGE_MAX_TOKEN_NUM=128
 
 MASTER_PORT=$(( 20000 + SLURM_JOB_ID % 20000 ))
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)

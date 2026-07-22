@@ -99,7 +99,6 @@ srun accelerate launch \
     --model $WORK/baseModels/Qwen3.5-9B \
     --save_safetensors false \
     --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_1024/train/ \
-    --mcore_model $WORK/multimodalModels/v237-20260613-130654/checkpoint-11600 \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -132,7 +131,7 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
+    --overlap_param_gather false \
     --overlap_grad_reduce true \
     --logging_steps 10 \
     --no_save_optim false \
