@@ -11,13 +11,13 @@
 #SBATCH --exclusive
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
@@ -32,7 +32,7 @@ export OMP_NUM_THREADS=16
 export NNODES=$SLURM_NNODES
 export GPUS_PER_NODE=4
 
-export TRITON_CACHE_DIR="/leonardo_work/AIFAC_5C0_261/triton_cache"
+export TRITON_CACHE_DIR="$WORK/triton_cache"
 mkdir -p $TRITON_CACHE_DIR
 
 # --- Network & Distributed Config (Leonardo Specifics) ---
@@ -91,9 +91,9 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-9B \
+    --model $WORK/baseModels/Qwen3.5-9B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen32b/train \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 4 \
@@ -114,7 +114,7 @@ srun accelerate launch \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
     --lr 0.00001 \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
     --dataloader_num_workers 8 \
@@ -124,7 +124,7 @@ srun accelerate launch \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
+    --overlap_param_gather false \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \

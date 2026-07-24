@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=16
+#SBATCH --nodes=32
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
@@ -9,17 +9,20 @@
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
+#SBATCH --cpus-per-task=32
+#SBATCH --requeue
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
-mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
+export TRITON_CACHE_DIR="$WORK/triton_cache"
+mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR $TRITON_CACHE_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
@@ -28,19 +31,19 @@ export WANDB_ENTITY="USER"
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=16
 export NNODES=$SLURM_NNODES
 export GPUS_PER_NODE=4
 
 export MALLOC_ARENA_MAX=2
 # --- Network & Distributed Config (Leonardo Specifics) ---
-export PYTORCH_ALLOC_CONF="expandable_segments:True"
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 # Prevent crashing when loading heavy multimodal datasets
 # Lowered from 28800 -> 600 so the watchdog fires before manual scancel,
 # producing a real "rank X stuck in collective Y" line instead of silent hang.
-export NCCL_TIMEOUT=1800
-export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800
+export NCCL_TIMEOUT=28800
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=28800
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 
 # Diagnostic: surface NCCL hangs with a stack + flight-recorder dump
@@ -83,6 +86,7 @@ nvidia-smi topo -m
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 IMAGE_MAX_TOKEN_NUM=128 \
+IMAGE_MIN_TOKEN_NUM=0 \
 srun accelerate launch \
     --num_processes $(( $NNODES * $GPUS_PER_NODE )) \
     --num_machines $NNODES \
@@ -93,9 +97,10 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3.5-9B-Instruct \
-    --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
+    --model $WORK/baseModels/Qwen3.5-9B \
+    --save_safetensors false \
+    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1/train \
+    --mcore_model $WORK/multimodalModels/v241-20260615-170621/checkpoint-19250 \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -103,28 +108,30 @@ srun accelerate launch \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
     --torch_dtype bfloat16 \
-    --micro_batch_size 1 \
-    --packing true \
+    --micro_batch_size 16 \
+    --packing false \
     --padding_free true \
     --global_batch_size 512 \
     --recompute_granularity full \
     --recompute_num_layers 1 \
     --recompute_method uniform \
-    --num_train_epochs 1 \
+    --num_train_epochs 2 \
     --finetune false \
     --cross_entropy_loss_fusion true \
-    --lr 0.00001 \
+    --lr 1e-05 \
     --lr_warmup_fraction 0.05 \
     --adam_beta1 0.9 \
     --use_distributed_optimizer \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels/v241-20260615-170621 \
     --save_steps 250 \
+    --eval_steps 250 \
+    --save_strategy steps \
     --max_length 8192 \
-    --dataloader_num_workers 8 \
-    --dataset_num_proc 8 \
+    --dataloader_num_workers 2 \
+    --dataset_num_proc 2 \
     --sequence_parallel true \
     --attention_backend flash \
     --no_load_optim false \
@@ -139,3 +146,5 @@ srun accelerate launch \
     --freeze_aligner false \
     --optimizer_cpu_offload true \
     --use_precision_aware_optimizer true \
+    --weight_decay 0.1 \
+    --report_to tensorboard \

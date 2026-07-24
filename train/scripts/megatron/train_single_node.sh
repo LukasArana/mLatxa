@@ -12,13 +12,13 @@
 #SBATCH --exclusive
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
@@ -57,9 +57,9 @@ MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
 megatron sft \
-    --model $WORK/baseModels/gemma-4-E4B-it \
+    --model $WORK/baseModels/Qwen3-2B/ \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen4b/train/ \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 1 \
@@ -80,7 +80,7 @@ megatron sft \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
     --lr 0.00001 \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels \
     --save_steps 1 \
     --max_length 8192 \
     --dataloader_num_workers 1 \
@@ -90,7 +90,7 @@ megatron sft \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
+    --overlap_param_gather false \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \

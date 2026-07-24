@@ -13,13 +13,13 @@
 #SBATCH --exclusive
 
 # --- Environment Activation ---
-source /leonardo_work/AIFAC_5C0_261/environments/env_torch_2_9_megratron/bin/activate
+source $WORK/environments/env_torch_2_9_megratron/bin/activate
 
 # --- Directory Setup & Variables ---
-export TMPDIR="/leonardo_work/AIFAC_5C0_261/tmp"
-export HF_HOME="/leonardo_work/AIFAC_5C0_261/hf_cache"
-export MODELSCOPE_CACHE="/leonardo_work/AIFAC_5C0_261/modelscope_cache"
-export WANDB_DIR="/leonardo_work/AIFAC_5C0_261/lukas/wandb_logs"
+export TMPDIR="$WORK/tmp"
+export HF_HOME="$WORK/hf_cache"
+export MODELSCOPE_CACHE="$WORK/modelscope_cache"
+export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
@@ -40,10 +40,11 @@ export PYTORCH_ALLOC_CONF="expandable_segments:True"
 export SWIFT_PATCH_CONV3D=1
 
 
-MAX_PIXELS=1003520
 
 nvidia-smi topo -m
-
+export video_max_token_num=0
+export video_max_token_num=0
+export FPS_MIN_FRAMES=0
 
 
 # --- Training Launch ---
@@ -56,12 +57,13 @@ MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
-SWIFT_USE_MCORE_GDN=1
-
+SWIFT_USE_MCORE_GDN=1 # 117571, 117571, 220918
+export IMAGE_MAX_TOKEN_NUM=400 #
+IMAGE_MAX_TOKEN_NUM=400 \
 megatron sft \
-    --model /leonardo_work/AIFAC_5C0_261/baseModels/Qwen3.5-0.8B \
+    --model $WORK/baseModels/Qwen3.5-0.8B \
     --save_safetensors true \
-    --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_v1/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_eu_512/train/ \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
@@ -85,9 +87,9 @@ megatron sft \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --output_dir /leonardo_work/AIFAC_5C0_261/multimodalModels \
+    --output_dir $WORK/multimodalModels \
     --save_steps 250 \
-    --max_length 8192 \
+    --max_length 4052 \
     --dataloader_num_workers 1 \
     --dataset_num_proc 1 \
     --sequence_parallel true \
@@ -95,7 +97,7 @@ megatron sft \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
-    --overlap_param_gather true \
+    --overlap_param_gather false \
     --overlap_grad_reduce true \
     --logging_steps 5 \
     --no_save_optim false \

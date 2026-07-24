@@ -29,7 +29,6 @@ def process_geo_to_mswift(dataset_path):
         split = 'train' if 'train' in dataset else list(dataset.keys())[0]
         dataset = dataset[split]
     mswift_data = []
-    breakpoint()
     for idx, item in enumerate(dataset):
         # 1. Handle Images
         base64_images = []
@@ -80,7 +79,7 @@ def process_geo_to_mswift(dataset_path):
         mswift_data.append(mswift_entry)
     breakpoint()
     # Save as JSONL
-    output_dir = "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionjsonl/"
+    output_dir = "$WORK/datasets/train/finevisionjsonl/"
     output_file = os.path.join(output_dir, dataset_path.split('/')[-2], dataset_path.split('/')[-1])
     print(output_file)
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
