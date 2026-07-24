@@ -15,30 +15,38 @@ source /gscratch6/users/USER/vllmenv/bin/activate
 # Each entry: "model_path|temp|top_p|top_k|min_p|presence_penalty|rep_penalty"
 # OCR always uses greedy (temp=0); mmstar uses the per-model values below.
 declare -a MODELS=(
-
     # ── Qwen3.5-9B family ──────────────────────────────────────────────────
-    "/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v2-multimodal_1024|0.7|0.8|20|0.0|1.5|1.0"
-    "/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v2|0.7|0.8|20|0.0|1.5|1.0"
-    "/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-2B-v2/|0.7|0.8|20|0.0|1.5|1.0"
+    #"/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v2-multimodal_1024|0.7|0.8|20|0.0|1.5|1.0"
+    #"/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v2|0.7|0.8|20|0.0|1.5|1.0"
+   # "/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-2B-v2/|0.7|0.8|20|0.0|1.5|1.0"
     #"/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v1|0.7|0.95|20|0.0|1.5|1.0"
     #"/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3.5-9B-v2-2epoch|0.7|0.95|20|0.0|1.5|1.0"
-
+ #   "/proiektuak/ilenia/models-instruct/gal_multimodal_gal_124|0.7|0.95|20|0.0|1.5|1.0"
+  #  "/proiektuak/ilenia/models-instruct/v1_eu_en_1000|0.7|0.95|20|0.0|1.5|1.0"
+   # "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v2|0.7|0.95|20|0.0|1.5|1.0"
+    "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v1_multimodal_4|0.7|0.95|20|0.0|1.5|1.0"
+    "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v1_multimodal_4|0|0.95|20|0.0|1.5|1.0"
+    "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v1_multimodal_4|0.5|0.95|20|0.0|1.5|1.0"
     # ── Qwen3-VL-32B family ────────────────────────────────────────────────
     #"Qwen/Qwen3-VL-32B-Instruct|0.7|0.8|20|0.0|1.5|1.0"
    # "/proiektuak/ilenia-scratch/models-instruct/Latxa-Qwen3-32B-v2|0.7|0.8|20|0.0|1.5|1.0"
-
+    #"/proiektuak/ilenia/latxa-ereduak/LatxaQ-3.5-27B|0.7|0.8|20|0.0|1.5|1.0"
+   # "/proiektuak/ilenia/latxa-ereduak/Latxa-Qwen3.5-27B-v2-2epoch/|0.7|0.8|20|0.0|1.5|1.0"
+  #  "Qwen/Qwen3.5-27B|0.7|0.8|20|0.0|1.5|1.0"
+  #  "Qwen/Qwen3.6-27B|0.7|0.8|20|0.0|1.5|1.0"
     # ── Qwen3-VL-8B family ─────────────────────────────────────────────────
   #  "Qwen/Qwen3-VL-8B-Instruct|0.7|0.8|20|0.0|1.5|1.0"
   #  "/proiektuak/ilenia-scratch/models-instruct/multilingual-multimodal/8b.mono.eu|0.7|0.8|20|0.0|1.5|1.0"
 )
 
 # ─── Tasks ────────────────────────────────────────────────────────────────────
-# Available: mmstar_en  mmstar_eu  ocr_eu
+# Available: mmstar_en  mmstar_eu  mmstar_eu_reviewed  ocr_eu  hallusion_bench
 tasks_selected=(
     "mmstar_en"
     "mmstar_eu"
     "ocr_eu"
     "mmstar_eu_reviewed"
+    "hallusion_bench"
 )
 
 # ─── Evaluation loop ──────────────────────────────────────────────────────────
@@ -47,7 +55,7 @@ for entry in "${MODELS[@]}"; do
     model_short="$(basename "$model_path")"
 
     for task in "${tasks_selected[@]}"; do
-        echo "=== Model: $model_path | Task: $task ==="
+        echo "=== Model: $model_path | Task: $task === | Config: temp=$temp, top_p=$top_p, top_k=$top_k, min_p=$min_p, presence_penalty=$pres_pen, repetition_penalty=$rep_pen"
 
         if [[ $task == "mmstar_en" ]]; then
             python3 tasks/mmstar/mmstar_offline.py \
@@ -101,6 +109,21 @@ for entry in "${MODELS[@]}"; do
                 --temperature 0.0 \
                 --dataset_name "HiTZ/ocr-eu" \
                 --output_file "results/${model_short}/ocr_eu_results.jsonl" \
+                --batch_size 8
+
+        elif [[ $task == "hallusion_bench" || $task == "hallusionbench" ]]; then
+            python3 tasks/hallusionBench/hallusion_offline.py \
+                --model_path "$model_path" \
+                --max_new_tokens 10 \
+                --temperature "$temp" \
+                --top_p "$top_p" \
+                --top_k "$top_k" \
+                --min_p "$min_p" \
+                --presence_penalty "$pres_pen" \
+                --repetition_penalty "$rep_pen" \
+                --dataset_name "lmms-lab/HallusionBench" \
+                --split "image" \
+                --output_file "results/${model_short}/hallusionbench_results_image.jsonl" \
                 --batch_size 8
         fi
 
