@@ -211,3 +211,6 @@ out/
 *.jsonl
 logs/
 .slurm/
+tmp/
+OPENAI_API_KEY.txt
+GEMINI_API_KEY.txt
