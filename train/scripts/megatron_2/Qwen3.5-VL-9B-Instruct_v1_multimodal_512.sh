@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
-#SBATCH --nodes=32
+#SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
@@ -125,7 +125,7 @@ srun accelerate launch \
     --lr_decay_style cosine \
     --output_dir $WORK/multimodalModels \
     --save_steps 250 \
-    --max_length 8192 \
+    --max_length 4096 \
     --dataloader_num_workers 4 \
     --dataset_num_proc 4 \
     --sequence_parallel true \

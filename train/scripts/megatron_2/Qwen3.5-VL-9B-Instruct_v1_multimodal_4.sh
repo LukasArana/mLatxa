@@ -99,6 +99,7 @@ srun accelerate launch \
     --model $WORK/baseModels/Qwen3.5-9B \
     --save_safetensors false \
     --cached_dataset /leonardo_work/AIFAC_5C0_261/datasets/train/preprocessed/multimodal_4_v1_eu/train_fixed/ \
+    --mcore_model /leonardo_work/AIFAC_5C0_261/multimodalModels/v304-20260721-140858/checkpoint-1250/ \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \

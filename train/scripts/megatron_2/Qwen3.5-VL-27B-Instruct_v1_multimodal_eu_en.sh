@@ -135,11 +135,10 @@ srun accelerate launch \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
-    --tensor_model_parallel_size 8 \
+    --tensor_model_parallel_size 4 \
     --torch_dtype bfloat16 \
     --micro_batch_size 1 \
     --packing true \
-    --padding_free true \
     --global_batch_size 512 \
     --recompute_granularity full \
     --recompute_num_layers 32 \
@@ -155,7 +154,7 @@ srun accelerate launch \
     --lr_decay_style cosine \
     --output_dir $WORK/multimodalModels \
     --save_steps 250 \
-    --max_length 8192 \
+    --max_length 4192 \
     --dataloader_num_workers 4 \
     --dataset_num_proc 4 \
     --sequence_parallel true \

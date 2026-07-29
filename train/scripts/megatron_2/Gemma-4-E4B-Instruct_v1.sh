@@ -93,14 +93,14 @@ srun accelerate launch \
     --loss_scale ignore_empty_think \
     --split_dataset_ratio 0.01 \
     --tensor_model_parallel_size 4 \
-    --pipeline_model_parallel_size 1 \
-    --micro_batch_size 4 \
-    --packing true \
-    --padding_free true \
+    --torch_dtype bfloat16 \
+    --micro_batch_size 1 \
+    --packing false \
+    --padding_free false \
     --global_batch_size 512 \
     --recompute_granularity full \
-    --recompute_method uniform \
     --recompute_num_layers 1 \
+    --recompute_method uniform \
     --num_train_epochs 2 \
     --finetune false \
     --cross_entropy_loss_fusion true \
@@ -110,22 +110,19 @@ srun accelerate launch \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --output_dir $WORK/multimodalModels/gemma-4-E4B-it/ \
+    --output_dir $WORK/multimodalModels \
     --save_steps 250 \
     --max_length 8192 \
-    --dataloader_num_workers 2 \
-    --dataset_num_proc 2 \
-    --sequence_parallel true \
-    --attention_backend flash \
+    --dataloader_num_workers 4 \
+    --dataset_num_proc 4 \
+    --attention_backend fused \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
     --overlap_param_gather false \
     --overlap_grad_reduce false \
-    --logging_steps 5 \
+    --logging_steps 10 \
     --no_save_optim false \
     --freeze_llm false \
     --freeze_vit true \
-    --freeze_aligner false \
-    --dist_ckpt_save_pre_mcore_014 true \
-    --use_precision_aware_optimizer true
+    --freeze_aligner false

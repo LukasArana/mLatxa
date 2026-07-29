@@ -57,7 +57,9 @@ MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
 megatron sft \
-    --model $WORK/baseModels/Qwen3-2B/ \
+    --model $WORK/baseModels/Llama3.1 \
+    --model_type llama \
+    --template llama3 \
     --save_safetensors true \
     --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen4b/train/ \
     --load_from_cache_file true \

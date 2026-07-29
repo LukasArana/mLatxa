@@ -50,18 +50,17 @@ export FPS_MIN_FRAMES=0
 # --- Training Launch ---
 echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $MASTER_PORT"
 
-# For more information on multi-node training launch methods, refer to:
-# https://github.com/modelscope/ms-swift/tree/main/examples/train/multi-node
-
 MASTER_PORT=9327
 MAIN_PROCESS_IP=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export ACCELERATE_FSDP_SHARDING_STRATEGY="1"
 
+echo $(which python3)
+
 SWIFT_USE_MCORE_GDN=1 # 117571, 117571, 220918
-export IMAGE_MAX_TOKEN_NUM=400 #
-IMAGE_MAX_TOKEN_NUM=400 \
+export IMAGE_MAX_TOKEN_NUM=124 #
+IMAGE_MAX_TOKEN_NUM=124 \
 megatron sft \
-    --model $WORK/baseModels/Qwen3.5-0.8B \
+    --model $WORK/baseModels/gemma-4-12B-it/ \
     --save_safetensors true \
     --cached_dataset $WORK/datasets/train/preprocessed/multimodal_v1_eu_512/train/ \
     --load_from_cache_file true \
@@ -72,8 +71,8 @@ megatron sft \
     --pipeline_model_parallel_size 1 \
     --micro_batch_size 1 \
     --global_batch_size 4 \
-    --packing true \
-    --padding_free \
+    --packing false \
+    --padding_free false \
     --recompute_granularity full \
     --recompute_method uniform \
     --recompute_num_layers 1 \
@@ -92,16 +91,14 @@ megatron sft \
     --max_length 4052 \
     --dataloader_num_workers 1 \
     --dataset_num_proc 1 \
-    --sequence_parallel true \
-    --attention_backend flash \
+    --attention_backend fused \
     --no_load_optim false \
     --no_load_rng false \
     --save_total_limit 2 \
     --overlap_param_gather false \
-    --overlap_grad_reduce true \
-    --logging_steps 5 \
+    --overlap_grad_reduce false \
+    --logging_steps 10 \
     --no_save_optim false \
     --freeze_llm true \
     --freeze_vit true \
     --freeze_aligner false
-
