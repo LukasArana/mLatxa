@@ -95,11 +95,11 @@ srun --cpu-bind=none bash -c '
         --machine_rank $SLURM_NODEID \
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model ~/scratch/basemodels/Qwen3.5-35B-A3B \
-        --mcore_model ... \
+        --mcore_model $SCRATCH/multimodalModels/v159-20260831-180126/checkpoint-3500 \
         --save_safetensors false \
         --cached_dataset ~/scratch/data/v2_qwen35/train/ \
         --load_from_cache_file true \
-        --split_dataset_ratio 0 \
+        --split_dataset_ratio 0.1 \
         --add_non_thinking_prefix true \
         --expert_model_parallel_size 4 \
         --pipeline_model_parallel_size 4 \
@@ -125,7 +125,7 @@ srun --cpu-bind=none bash -c '
         --adam_eps 1e-8 \
         --lr_decay_style cosine \
         --output_dir ~/scratch/multimodalModels \
-        --save_steps 250 \
+        --save_steps 1000 \
         --max_length 8192 \
         --dataloader_num_workers 8 \
         --dataset_num_proc 8 \
