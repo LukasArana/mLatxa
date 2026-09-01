@@ -5,8 +5,8 @@
 #SBATCH --partition=boost_usr_prod
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --mem=60GB
-#SBATCH --output=$HOME/mLatxa/datasets/export/log/log.out
-#SBATCH --error=$HOME/mLatxa/datasets/export/log/log.err
+#SBATCH --output=log/log.out
+#SBATCH --error=log/log.err
 
 
 # 1. Activate environment

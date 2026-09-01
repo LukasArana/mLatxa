@@ -15,7 +15,11 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-source $WORK/environments/env_torch_2_9_megratron/bin/activate
+module purge
+module load miniforge cuda/12.6 cudnn
+
+source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
+conda activate megatron-swift
 
 MCORE_MODEL="$1"
 OUTPUT_DIR="${2:-${MCORE_MODEL%/}-hf}"
