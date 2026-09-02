@@ -6,7 +6,7 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --mem=100GB
 #SBATCH --gres=gpu:1
-#SBATCH --array=0-12%4
+#SBATCH --array=0-12%2
 #SBATCH --output=.slurm/multimodal_eval_%A_%a.out
 #SBATCH --error=.slurm/multimodal_eval_%A_%a.err
 
