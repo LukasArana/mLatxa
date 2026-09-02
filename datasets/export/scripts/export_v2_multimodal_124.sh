@@ -6,8 +6,8 @@
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --mem=60GB
 #SBATCH --time=3:00:00
-#SBATCH --output=$HOME/mLatxa/datasets/export/log/log_v2_multimodal.out
-#SBATCH --error=$HOME/mLatxa/datasets/export/log/log_v2_multimodal.err
+#SBATCH --output=log/log_v2_multimodal.out
+#SBATCH --error=log/log_v2_multimodal.err
 
 
 # 1. Activate environment

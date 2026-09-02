@@ -7,7 +7,7 @@ INPUT="${3:-$WORK/datasets/train/finevisionProcessed/train.jsonl}"
 echo $LANGUAGE
 case "$LANGUAGE" in
     eu)
-        MODEL="/leonardo_work/EUHPC_E04_042/LatxaTxat_models/InstructionModels/Latxa-Llama-3.1-70B-Instruct-exp_2_101_v2/"
+        MODEL="/leonardo_work/AIFAC_5C0_261/baseModels/Latxa70B"
         ;;
     cat)
         MODEL="$WORK/baseModels/Qwen3.5-27B/"

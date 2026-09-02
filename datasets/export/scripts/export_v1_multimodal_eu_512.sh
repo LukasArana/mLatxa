@@ -6,8 +6,8 @@
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --mem=60GB
 #SBATCH --time=3:00:00
-#SBATCH --output=$HOME/mLatxa/datasets/export/log/log.out
-#SBATCH --error=$HOME/mLatxa/datasets/export/log/log.err
+#SBATCH --output=log/log.out
+#SBATCH --error=log/log.err
 
 
 # 1. Activate environment
@@ -43,7 +43,7 @@ export IMAGE_MAX_TOKEN_NUM=512
 IMAGE_MAX_TOKEN_NUM=512 \
 swift export \
     --model $WORK/baseModels/Qwen3.5-9B \
-    --custom_dataset_info $HOME/mLatxa/datasets/export/configs/v1_multimodal_eu.json \
+    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal_eu.json \
     --dataset multimodal_eu magpie_qwen hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
     --template qwen \
     --max_length 8192 \

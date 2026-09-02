@@ -12,7 +12,7 @@
 #SBATCH --mem=30800MB
 #SBATCH --gres=tmpfs:200g
 
-BASE_PATH="/leonardo_work/AIFAC_5C0_261/multimodalModels"
+BASE_PATH="$WORK/multimodalModels"
 # REMOTE_PATH="${REMOTE_USER}@xirimiri.ixa.eus:/proiektuak/ilenia-scratch/models-instruct"
 REMOTE_PATH="${REMOTE_USER}@xirimiri.ixa.eus:/proiektuak/ilenia-scratch/models-instruct"
 # MODELS=(
@@ -76,7 +76,7 @@ for CHKPT in "${CHECKPOINTS[@]}"; do
     rsync -PravzHS --info=progress2 \
         --compress-level=9 \
         --exclude iter_0005750 \
-        --partial-dir=/leonardo_work/AIFAC_5C0_261/multimodalModels/.rsync-partial \
+        --partial-dir=$WORK/multimodalModels/.rsync-partial \
         ${LOCAL_MODEL_PATH}/ \
         ${REMOTE_MODEL_PATH}/
 

@@ -20,7 +20,6 @@ export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 # Each entry: "model_path|temp|top_p|top_k|min_p|presence_penalty|rep_penalty"
 # OCR always uses greedy (temp=0); mmstar uses the per-model values below.
 declare -a MODELS=(
-
     # ── Qwen3.5-9B family ──────────────────────────────────────────────────
     "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v1|0.7|0.95|20|0.0|1.5|1.0"
     "/proiektuak/ilenia/models-instruct/Latxa-Qwen3.5-9B-v1_gal_multimodal_gal|0.7|0.8|20|0.0|1.5|1.0"
