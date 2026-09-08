@@ -1,15 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=swift-multinode
 #SBATCH --nodes=4
+#SBATCH --ntasks-per-node=1
+#SBATCH --gres=gpu:4
 #SBATCH --time 1:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
 #SBATCH --qos=acc_debug
-#SBATCH --output=logs/%j.out
-#SBATCH --error=logs/%j.err
-#SBATCH --exclusive
-
-set -e
+#SBATCH --output=models/convert/logs/%j.out
+#SBATCH --error=models/convert/logs/%j.err
 
 if [ -z "$1" ]; then
     echo "Usage: sbatch $0 <mcore_checkpoint_dir> [output_dir]"
@@ -30,7 +29,7 @@ conda activate megatron-swift
 
 MCORE_MODEL="$1"
 OUTPUT_DIR="${2:-${MCORE_MODEL%/}-hf}"
-
+echo "a"
 if [ ! -d "$MCORE_MODEL" ]; then
     echo "Error: checkpoint directory not found: $MCORE_MODEL"
     exit 1
