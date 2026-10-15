@@ -31,7 +31,6 @@ export TMPDIR="$WORK/tmp"
 
 #WANBD
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 export WANDB_DIR="$WORK/lukas/wandb_logs"
 mkdir -p $WANDB_DIR
 # 4. Clean existing small caches (Free up space if root disk is already full)

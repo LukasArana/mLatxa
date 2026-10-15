@@ -24,7 +24,6 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 export WANDB_MODE=offline
 export WANDB_PROJECT="gemma-4-finetuning"
 export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
-export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8

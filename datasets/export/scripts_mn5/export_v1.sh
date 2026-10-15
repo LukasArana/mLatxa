@@ -31,7 +31,6 @@ export TMPDIR="$SCRATCH/tmp"
 
 # 4. WANDB Configuration
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 export WANDB_DIR="$SCRATCH/wandb_logs"
 mkdir -p $WANDB_DIR
 
