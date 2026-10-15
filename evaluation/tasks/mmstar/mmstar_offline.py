@@ -102,6 +102,8 @@ def evaluate_model(args):
     # Load dataset
     print(f"Loading dataset: {args.dataset_name}")
     dataset = load_dataset(args.dataset_name, split=split)
+    if args.limit:
+        dataset = dataset.select(range(min(args.limit, len(dataset))))
 
     # Prepare output
     output_path = Path(args.output_file)
@@ -111,6 +113,7 @@ def evaluate_model(args):
     correct_exact = 0
     correct_logprobs = 0
     total = 0
+    failed = 0  # examples lost to batch errors; counted as wrong
 
     print(f"Evaluating {len(dataset)} examples with batch size {args.batch_size}...")
 
@@ -119,6 +122,7 @@ def evaluate_model(args):
         for start_idx in tqdm(range(0, len(dataset), args.batch_size)):
             end_idx = min(start_idx + args.batch_size, len(dataset))
             batch_indices = list(range(start_idx, end_idx))
+            batch_done = 0
 
             try:
                 # Prepare batch
@@ -145,6 +149,7 @@ def evaluate_model(args):
                     if is_correct_exact:
                         correct_exact += 1
                     total += 1
+                    batch_done += 1
 
                     # 2. Evaluating log probabilities for each option
                     option_log_probs = {"A": float("-inf"), "B": float("-inf"), "C": float("-inf"), "D": float("-inf")}
@@ -179,7 +184,9 @@ def evaluate_model(args):
 
             except Exception as e:
                 print(f"\nError processing batch {start_idx}-{end_idx}: {e}")
-                for idx in batch_indices:
+                failed += len(batch_indices) - batch_done
+                total += len(batch_indices) - batch_done
+                for idx in batch_indices[batch_done:]:
                     f.write(json.dumps({"idx": idx, "error": str(e)}) + "\n")
                 f.flush()
 
@@ -190,6 +197,8 @@ def evaluate_model(args):
     print(f"\n{'='*60}")
     print(f"Evaluation Complete!")
     print(f"Total: {total}")
+    if failed:
+        print(f"WARNING: {failed} examples failed (batch errors) and are counted as wrong")
     print(f"Correct (Exact Match): {correct_exact} ({accuracy_exact:.2f}%)")
     print(f"Correct (Highest Logprob): {correct_logprobs} ({accuracy_logprobs:.2f}%)")
     print(f"Results saved to: {output_path}")

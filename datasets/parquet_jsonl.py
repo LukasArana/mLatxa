@@ -23,10 +23,8 @@ def process_geo_to_mswift(dataset_path):
         dataset = load_dataset(dataset_path)
 
     if not isinstance(dataset, list):
-        assert len(dataset) == 1, "Expected only one split in the dataset. Please check the dataset structure."
-        dataset = dataset[0]
-        # We'll assume we are processing the 'train' split based on your output
-        split = 'train' if 'train' in dataset else list(dataset.keys())[0]
+        # DatasetDict: use the 'train' split, or the only split there is
+        split = 'train' if 'train' in dataset else next(iter(dataset))
         dataset = dataset[split]
     mswift_data = []
     for idx, item in enumerate(dataset):
@@ -43,7 +41,7 @@ def process_geo_to_mswift(dataset_path):
                     base64_images.append(img)
         else:
             multimodal = False
-            texts = dataset[idx]
+            texts = item
         messages = []
         roles = ["system", "user", "assistant"]
         for i, turn in enumerate(texts):
@@ -77,9 +75,8 @@ def process_geo_to_mswift(dataset_path):
             mswift_entry["images"] = base64_images
 
         mswift_data.append(mswift_entry)
-    breakpoint()
     # Save as JSONL
-    output_dir = "$WORK/datasets/train/finevisionjsonl/"
+    output_dir = os.path.join(os.environ["WORK"], "datasets/train/finevisionjsonl/")
     output_file = os.path.join(output_dir, dataset_path.split('/')[-2], dataset_path.split('/')[-1])
     print(output_file)
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -90,6 +87,7 @@ def process_geo_to_mswift(dataset_path):
     print(f"Done! Processed {len(mswift_data)} rows into {output_file}")
 
 # Usage
+EUHPC_WORK = os.environ.get("EUHPC_WORK", "/leonardo_work/EUHPC_E04_042")
 if __name__ == "__main__":
     datasets = [
     #    "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/aldizkariak/full.train.04_clean-01.onlytext.jsonl",
@@ -115,8 +113,8 @@ if __name__ == "__main__":
 #        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/parleus/parlamentu_db_final_eu.train.04_clean-01.onlytext.jsonl",
 #        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/wikipedia/wikipedia.train.eu.04_clean-01.onlytext.jsonl",
 #        "/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets/iter-4/zelaihandi/zelaiHandi.train.trimmed.04_clean-01.onlytext.jsonl",
-        "/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.jsonl",
-        "/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl"
+        f"{EUHPC_WORK}/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.jsonl",
+        f"{EUHPC_WORK}/datasets/InstructDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl"
     ]
     #/leonardo_work/EUHPC_E04_042/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.jsonl
     #

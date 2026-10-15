@@ -1,7 +1,7 @@
 # Configure Gradio to use a user-writable temp directory
 import os
 
-GRADIO_TMP_DIR = "$HOME/.gradio_tmp"
+GRADIO_TMP_DIR = os.environ.get("GRADIO_TMP_DIR", os.path.expanduser("~/.gradio_tmp"))
 os.makedirs(GRADIO_TMP_DIR, exist_ok=True)
 os.environ["GRADIO_TEMP_DIR"] = GRADIO_TMP_DIR
 

@@ -48,13 +48,15 @@ def load_dataset_slice(dataset_path, slice=slice(0, None, 1)):
     try:
         dataset = load_dataset(dataset_path)
         dataset = dataset["val"]
-    except:
+    except Exception:  # not a hub dataset: fall back to a local json/tsv file
         if "json" in dataset_path:
             #Load as json
             with open(dataset_path, "r") as f:
                 dataset = json.load(f)
         elif "tsv" in dataset_path:
             dataset = pd.read_csv(dataset_path, sep="\t").to_dict("records")
+        else:
+            raise
 
     return [dataset[i] for i in range(*slice.indices(len(dataset)))]
 
@@ -112,7 +114,7 @@ def main(args):
     print(f"Conversation ID: {conversation_id}")
 
     dataset = load_dataset_slice(
-        args.dataset_path, slice(args.dataset_start + progress, args.dataset_end, 1)
+        args.dataset_path, slice(args.dataset_start + progress, None if args.dataset_end == -1 else args.dataset_end, 1)
     )
 
     unable = []
@@ -138,7 +140,7 @@ def main(args):
                 ]
             except Exception as e:
                 logger.error(f"Error calling API: {e}")
-                outputs.append("[]")  # Empty JSON array as fallback
+                outputs = ["[]"] * len(prompts)  # Empty JSON array as fallback
             for idx, (original, output) in enumerate(zip(batch, outputs)):
 
                 buffered = io.BytesIO()
@@ -206,6 +208,6 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_start", type=int, default=0)
     parser.add_argument("--dataset_end", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=124)  # Reduced batch size for API calls
-    parser.add_argument("--multiple_choice", type=bool, default=False, help="Use multiple choice questions")
+    parser.add_argument("--multiple_choice", action="store_true", help="Use multiple choice questions")
     args = parser.parse_args()
     main(args)

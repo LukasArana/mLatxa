@@ -1,46 +1,46 @@
 [
   {
     "dataset_name": "multimodal_4",
-    "dataset_path": "$SCRATCH/data/leonardo/InstructionDatasets/multimodal/train_multimodal4_fixed.jsonl"
+    "dataset_path": "${SCRATCH}/data/leonardo/InstructionDatasets/multimodal/train_multimodal4_fixed.jsonl"
   },
   {
     "dataset_name": "magpie_qwen",
-    "dataset_path": "$SCRATCH/data/leonardo/InstructionDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/InstructionDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
     "columns": { "conversations": "conversations" }
   },
   {
     "dataset_name": "hplt_v1",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "booktegi",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_booktegi_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_booktegi_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "cultura-x",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_culturax_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_culturax_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "egunkaria",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_egunkaria_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_egunkaria_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "wikipedia",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_wikipedia_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_wikipedia_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "euscrawl_v1.1",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_euscrawl-v1.1_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_euscrawl-v1.1_train.jsonl",
     "columns": { "prompt": "text" }
   },
   {
     "dataset_name": "oscar",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/Latxa_colossal-oscar_train.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/Latxa_colossal-oscar_train.jsonl",
     "columns": { "prompt": "text" }
   }
 ]

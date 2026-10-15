@@ -261,6 +261,7 @@ def run_batched_chat(
         for start_idx in tqdm(range(0, n, batch_size)):
             end_idx = min(start_idx + batch_size, n)
             batch_indices = list(range(start_idx, end_idx))
+            batch_done = 0
             try:
                 messages_batch = prepare_inputs_fn(dataset, batch_indices)
                 outputs = llm.chat(
@@ -272,11 +273,15 @@ def run_batched_chat(
                     result = process_output_fn(idx, dataset[idx], output)
                     results.append(result)
                     f.write(json.dumps(result, ensure_ascii=False) + "\n")
+                    batch_done += 1
                 f.flush()
             except Exception as e:
                 print(f"\nError processing batch {start_idx}-{end_idx}: {e}")
-                for idx in batch_indices:
-                    f.write(json.dumps({"idx": idx, "error": str(e)}) + "\n")
+                for idx in batch_indices[batch_done:]:
+                    # keep failed examples in results so accuracy counts them as wrong
+                    error_result = {"idx": idx, "error": str(e)}
+                    results.append(error_result)
+                    f.write(json.dumps(error_result) + "\n")
                 f.flush()
 
     return results
@@ -289,9 +294,12 @@ def strip_think_tags(text: str) -> str:
 
 def summarize_mc_results(results: List[dict], output_path, keys=("correct_exact_match", "correct_logprobs")):
     total = len(results)
+    n_errors = sum(1 for r in results if "error" in r)
     print(f"\n{'='*60}")
     print("Evaluation Complete!")
     print(f"Total: {total}")
+    if n_errors:
+        print(f"WARNING: {n_errors} examples failed (batch errors) and are counted as wrong")
     for key in keys:
         n_correct = sum(1 for r in results if r.get(key))
         acc = (n_correct / total * 100) if total else 0.0

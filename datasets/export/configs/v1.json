@@ -1,42 +1,42 @@
 [
   {
     "dataset_name": "magpie_qwen",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl",
     "columns": { "conversations": "conversations" }
   },
   {
     "dataset_name": "hplt_v1",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_hplt-v1_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_hplt-v1_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "booktegi",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_booktegi_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_booktegi_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "cultura-x",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_culturax_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_culturax_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "egunkaria",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_egunkaria_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_egunkaria_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "wikipedia",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_wikipedia_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_wikipedia_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "euscrawl_v1.1",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_euscrawl-v1.1_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_euscrawl-v1.1_train.jsonl",
     "columns": { "response": "text" }
   },
   {
     "dataset_name": "oscar",
-    "dataset_path": "~/scratch/data/leonardo/jsonl/Latxa_colossal-oscar_train.jsonl",
+    "dataset_path": "${WORK}/datasets/datasets/PretrainDatasets/Latxa_colossal-oscar_train.jsonl",
     "columns": { "response": "text" }
   }
 ]

@@ -32,13 +32,15 @@ def load_dataset_slice(dataset_path, dataset_slice=slice(0, None, 1)):
     try:
         dataset = load_dataset(dataset_path)
         dataset = dataset["train"]
-    except:
+    except Exception:  # not a hub dataset: fall back to a local json/tsv file
         if "json" in dataset_path:
             #Load as json
             with open(dataset_path, "r") as f:
                 dataset = json.load(f)
         elif "tsv" in dataset_path:
             dataset = pd.read_csv(dataset_path, sep="\t").to_dict("records")
+        else:
+            raise
     return dataset[dataset_slice]
 def batch_generator(dataset, batch_size=1):
     #Return a generator that yields batches of the dataset
@@ -107,7 +109,7 @@ def assemble_translations(
     responses: List[str],
     metadata: List[Dict[str, str]],
 ) -> Tuple[List[Optional[dict]], List[int]]:
-    option_name = {"1": "1", "2": "2", "3": "3", "4": "4"}
+    option_name = {"1": "A", "2": "B", "3": "C", "4": "D"}  # translated option position -> MMBench column
     translated_batch = [dict(item) for item in batch]
     failures: List[int] = []
 
@@ -258,6 +260,6 @@ if __name__ == "__main__":
     parser.add_argument("--dataset_start", type=int, default=0)
     parser.add_argument("--dataset_end", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=124)  # Reduced batch size for API calls
-    parser.add_argument("--multiple_choice", type=bool, default=False, help="Use multiple choice questions")
+    parser.add_argument("--multiple_choice", action="store_true", help="Use multiple choice questions")
     args = parser.parse_args()
     main(args)

@@ -190,9 +190,6 @@ def main():
             out.flush()
             written += 1
 
-            if written == 10:
-                break
-
             if args.sleep:
                 time.sleep(args.sleep)
 

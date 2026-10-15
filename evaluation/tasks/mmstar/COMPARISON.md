@@ -83,13 +83,13 @@ For 1500 examples on a single GPU:
 
 ### Server Approach
 ```bash
-cd $HOME/LatxaTxat/evaluation/scripts
+cd evaluation/scripts
 ./mmstar_openai_client.sh
 ```
 
 ### Offline Approach (Recommended)
 ```bash
-cd $HOME/LatxaTxat/evaluation/scripts
+cd evaluation/scripts
 ./mmstar_offline.sh
 ```
 

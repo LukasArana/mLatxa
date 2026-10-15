@@ -10,8 +10,9 @@
 #SBATCH --output=.slurm/multimodal_eval_%A_%a.out
 #SBATCH --error=.slurm/multimodal_eval_%A_%a.err
 
-#source /gscratch6/users/USER/vllmenv/bin/activate
-source /gaueko1/users/USER/py312/bin/activate
+# Submit from evaluation/ (paths below are relative to it), or set EVAL_DIR.
+source "${VENV:?set VENV to the evaluation virtualenv}/bin/activate"
+cd "${EVAL_DIR:-$SLURM_SUBMIT_DIR}" || exit 1
 export CUDA_HOME=/usr/local/cuda-12.1
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
@@ -44,13 +45,15 @@ declare -a MODELS=(
 )
 
 # ─── Tasks ────────────────────────────────────────────────────────────────────
-# Available: mmstar_en  mmstar_eu  ocr_eu pixmo_eu pixmo_en
+# Available: mmstar_en mmstar_eu mmstar_eu_reviewed ocr_eu pixmo_eu pixmo_en docci_eu docci_en animals_eu animals_en
 tasks_selected=(
     "animals_eu"
     "animals_en"
 )
-labels_path="/ikerlariak/USER/latxa_multimodal/animals_dataset/animals_name.txt"
-image_path="/ikerlariak/USER/latxa_multimodal/animals_dataset/animals"
+# animals_* need ANIMALS_DIR (contains animals/ and animals_name.txt); pixmo_* need PIXMO_IMAGE_DIR.
+labels_path="${ANIMALS_DIR:-}/animals_name.txt"
+animals_image_path="${ANIMALS_DIR:-}/animals"
+pixmo_image_path="${PIXMO_IMAGE_DIR:-}"
 
 # ─── Evaluation loop ──────────────────────────────────────────────────────────
 
@@ -61,8 +64,14 @@ model_short="$(basename "$model_path")"
 
 echo "Running model ${SLURM_ARRAY_TASK_ID}: ${model_short}"
 
+failed=0
 for task in "${tasks_selected[@]}"; do
     echo "=== Model: $model_path | Task: $task ==="
+    if [[ $task == animals_* && -z "${ANIMALS_DIR:-}" ]] || [[ $task == pixmo_* && -z "${PIXMO_IMAGE_DIR:-}" ]]; then
+        echo "Task '$task' needs ANIMALS_DIR / PIXMO_IMAGE_DIR to be set; skipping" >&2
+        failed=1
+        continue
+    fi
 
     if [[ $task == "mmstar_en" ]]; then
         python3 tasks/mmstar/mmstar_offline.py \
@@ -129,7 +138,7 @@ for task in "${tasks_selected[@]}"; do
             --presence_penalty "$pres_pen" \
             --repetition_penalty "$rep_pen" \
             --dataset_name "HiTZ/pixmo-ask-model-anything_eu" \
-            --image_path "$image_path" \
+            --image_path "$pixmo_image_path" \
             --output_file "results/${model_short}/pixmo_results_eu.jsonl" \
             --batch_size 8 \
             --language eu
@@ -145,7 +154,7 @@ for task in "${tasks_selected[@]}"; do
             --presence_penalty "$pres_pen" \
             --repetition_penalty "$rep_pen" \
             --dataset_name "HiTZ/pixmo-ask-model-anything_eu" \
-            --image_path "$image_path" \
+            --image_path "$pixmo_image_path" \
             --output_file "results/${model_short}/pixmo_results_en.jsonl" \
             --batch_size 8 \
             --language en
@@ -190,7 +199,7 @@ for task in "${tasks_selected[@]}"; do
             --min_p "$min_p" \
             --presence_penalty "$pres_pen" \
             --repetition_penalty "$rep_pen" \
-            --dataset_path "$image_path" \
+            --dataset_path "$animals_image_path" \
             --labels_path "$labels_path" \
             --output_file "results/${model_short}/animals_results_eu.jsonl" \
             --batch_size 8 \
@@ -206,16 +215,20 @@ for task in "${tasks_selected[@]}"; do
             --min_p "$min_p" \
             --presence_penalty "$pres_pen" \
             --repetition_penalty "$rep_pen" \
-            --dataset_path "$image_path" \
+            --dataset_path "$animals_image_path" \
             --labels_path "$labels_path" \
             --output_file "results/${model_short}/animals_results_en.jsonl" \
             --batch_size 8 \
             --language en
+
+    else
+        echo "Unknown task '$task'; skipping" >&2
+        failed=1
+        continue
     fi
 
     echo "Task '$task' for '$model_path' complete!"
 done
 
 echo "Array task ${SLURM_ARRAY_TASK_ID} finished!"
-
-echo "All evaluations complete!"
+exit $failed

@@ -5,8 +5,8 @@
 #SBATCH --gres=gpu:2
 #SBATCH --mem=100G
 #SBATCH --time=24:00:00
-#SBATCH --output=$HOME/mLatxa/datasets/translate/mmstar/out/mm_star.out
-#SBATCH --error=$HOME/mLatxa/datasets/translate/mmstar/err/mm_star.err
+#SBATCH --output=out/mm_star.out
+#SBATCH --error=err/mm_star.err
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -15,15 +15,15 @@ export TRANSFORMERS_NO_ADVISORY_WARNINGS=true
 export OMP_NUM_THREADS=16
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
-cd $HOME/mLatxa/datasets/translate
+cd "$HOME/mLatxa/datasets/translate" || exit
 
-source $HOME/mLatxa/datasets/translate/mmstar/env/bin/activate
+source mmstar/env/bin/activate
 
 echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES}"
 
 # Run the Python script
 python3 mmstar/mm_star.py \
-  --model_path HiTZ/Latxa-Llama-3.1-70B-Instruct\
+  --model_path HiTZ/Latxa-Llama-3.1-70B-Instruct \
   --dataset_path Lin-Chen/MMStar \
   --prompt_lang eu \
   --output_path "output/mm_star_eu.json" \

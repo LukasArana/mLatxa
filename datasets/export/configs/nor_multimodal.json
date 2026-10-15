@@ -1,11 +1,13 @@
 [
   {
     "dataset_name": "multimodal",
-    "dataset_path": "$WORK/datasets/train/finevisionProcessed/train_nor.jsonl"
+    "dataset_path": "${WORK}/datasets/train/finevisionProcessed/train_nor.jsonl"
   },
   {
-    "dataset_name": "cat",
-    "dataset_path": "$WORK/datasets/PretrainDatasets/nor.jsonl",
-    "columns": { "conversations": "conversations" }
+    "dataset_name": "nor",
+    "dataset_path": "${WORK}/datasets/PretrainDatasets/nor.jsonl",
+    "columns": {
+      "conversations": "conversations"
+    }
   }
 ]

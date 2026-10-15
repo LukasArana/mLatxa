@@ -11,9 +11,9 @@
 set -euo pipefail
 
 # Configuration
-MN5_USER="ehu"
+MN5_USER="${MN5_USER:?set MN5_USER}"
 MN5_HOST="login.mn5.bsc.es"
-LEONARDO_DATA_SOURCE="/leonardo_work/EUHPC_E04_042/datasets/PretrainDatasets"
+LEONARDO_DATA_SOURCE="${EUHPC_WORK:-/leonardo_work/EUHPC_E04_042}/datasets/PretrainDatasets"
 MN5_DEST="/gpfs/scratch/ehpc678/leonardo_data"
 
 # Colors

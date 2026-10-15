@@ -2,7 +2,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:4s
+#SBATCH --gres=gpu:4
 #SBATCH --time=24:00:00
 # --output / --error are set by translate_all.sh so each carries its [start,end) indexes.
 

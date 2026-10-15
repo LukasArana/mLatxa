@@ -1,21 +1,30 @@
 #!/usr/bin/env bash
-# run_judge.sh
+# send_batch2gpt.sh
 #
 # Full judge pipeline: prepare → submit → poll → download
 #
 # Usage:
-#   bash run_judge.sh
+#   VENV=/path/to/venv bash evaluation/scripts/send_batch2gpt.sh [PREDICTIONS_FILE]
+#
+# The API key is read from $OPENAI_API_KEY or, if unset, from evaluation/OPENAI_API_KEY.txt (gitignored).
 #
 # Adjust the variables in the CONFIG section before running.
 
 
-source /gscratch6/users/USER/vllmenv/bin/activate
-export OPENAI_API_KEY="$(cat /ikerlariak/USER/latxa_multimodal/mLatxa/evaluation/OPENAI_API_KEY.txt)"
+source "${VENV:?set VENV to the evaluation virtualenv}/bin/activate"
 set -euo pipefail
+
+EVAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$EVAL_DIR"
+if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+    OPENAI_API_KEY="$(cat "$EVAL_DIR/OPENAI_API_KEY.txt")"
+fi
+[[ -n "$OPENAI_API_KEY" ]] || { echo "OPENAI_API_KEY is empty" >&2; exit 1; }
+export OPENAI_API_KEY
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 
-PREDICTIONS_FILE="/ikerlariak/USER/latxa_multimodal/mLatxa/evaluation/results/Latxa-Qwen3.5-9B-v2-multimodal_1024/docci_results_eu2.jsonl"     # your input JSONL
+PREDICTIONS_FILE="${1:-results/Latxa-Qwen3.5-9B-v2-multimodal_1024/docci_results_eu2.jsonl}"     # your input JSONL
 MODEL_NAME="gpt-5.5"                              # judge model
 HF_SPLIT="test"                                 # HuggingFace dataset split
 HF_DATASET="google/docci"                   # HuggingFace dataset name
@@ -27,7 +36,7 @@ BATCH_ID_FILE="tmp/judge_batch_id.txt"
 # Final output
 model_dir="$(basename "$(dirname "$PREDICTIONS_FILE")")"
 pred_name="$(basename "$PREDICTIONS_FILE" .jsonl)"
-OUT_FILE="/ikerlariak/USER/latxa_multimodal/mLatxa/evaluation/results/${model_dir}_${pred_name}_judge_output2.jsonl"
+OUT_FILE="results/${model_dir}_${pred_name}_judge_gpt.jsonl"
 
 POLL_INTERVAL=30   # seconds between status checks
 

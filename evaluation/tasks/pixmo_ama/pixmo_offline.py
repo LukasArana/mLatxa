@@ -194,7 +194,7 @@ def prepare_inputs_with_images(dataset, batch_indices: List[int], language: str,
         else:  # language == "eu"
             prompt = PROMPT_EU % (question)
         
-        img = Image.open(image_path + example["image"]).convert("RGB")
+        img = Image.open(os.path.join(image_path, example["image"])).convert("RGB")
 
         messages = [
             {

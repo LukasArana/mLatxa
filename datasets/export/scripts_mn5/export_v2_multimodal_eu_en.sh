@@ -6,8 +6,8 @@
 #SBATCH --partition=gpp
 #SBATCH --qos=acc_ehpc
 #SBATCH --time=24:00:00
-#SBATCH --output=log/v2_multimodal_eu_en.out
-#SBATCH --error=log/v2_multimodal_eu_en.err
+#SBATCH --output=log/export_v2_multimodal_eu_en.out
+#SBATCH --error=log/export_v2_multimodal_eu_en.err
 
 # 1. Load modules and activate environment
 module purge
@@ -15,9 +15,10 @@ module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
 conda activate megatron-swift
+set -eo pipefail
 
 # 2. Create cache directories
-SCRATCH=~/scratch
+export SCRATCH=~/scratch
 mkdir -p $SCRATCH/hf_cache
 mkdir -p $SCRATCH/modelscope_cache
 mkdir -p $SCRATCH/tmp
@@ -30,7 +31,7 @@ export TMPDIR="$SCRATCH/tmp"
 
 # 4. WANDB Configuration
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 export WANDB_DIR="$SCRATCH/wandb_logs"
 mkdir -p $WANDB_DIR
 
@@ -49,11 +50,13 @@ export video_max_token_num=0
 
 echo $HOME
 
+CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v2_multimodal_eu_en.json)
+
 swift export \
-    --model ~/scratch/basemodels/Qwen3.5-9B \
-    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v2_multimodal_eu_en.json \
+    --model $SCRATCH/basemodels/Qwen3.5-9B \
+    --custom_dataset_info "$CFG" \
     --dataset multimodal_eu multimodal_en aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi magpie_qwen magpie_llama \
-    --template qwen \
+    --template qwen3_5 \
     --max_length 8192 \
     --dataset_num_proc 32 \
     --to_cached_dataset \

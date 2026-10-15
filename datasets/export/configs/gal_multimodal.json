@@ -1,11 +1,11 @@
 [
   {
     "dataset_name": "multimodal",
-    "dataset_path": "$WORK/datasets/train/finevisionProcessed/train_gal.jsonl"
+    "dataset_path": "${WORK}/datasets/train/finevisionProcessed/train_gal.jsonl"
   },
   {
     "dataset_name": "gal",
-    "dataset_path": "$WORK/datasets/PretrainDatasets/gal.jsonl",
+    "dataset_path": "${WORK}/datasets/PretrainDatasets/gal.jsonl",
     "columns": { "conversations": "conversations" }
   }
 ]

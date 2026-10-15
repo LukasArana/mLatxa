@@ -40,8 +40,8 @@ echo "Started: $(date)"
 
 python finevision_pipeline.py \
     --dataset_name $WORK/datasets/train/finevision \
-    --output_path $WORK/datasets/train/finevisionProcessed/train.jsonl \
-    --images_dir $WORK/datasets/train/finevisionProcessed/images \
+    --output_path $WORK/datasets/train/finevisionProcessed/train_multimodal4.jsonl \
+    --images_dir $WORK/datasets/train/finevisionProcessed/images_multimodal4 \
     --tokenizer_path $WORK/baseModels/Qwen3.5-9B \
     --instruct_path $WORK/datasets/datasets/InstructDatasets/magpie.qwen3.32b.en.noreasoning.onlyconver.jsonl \
     --num_workers $SLURM_CPUS_PER_TASK \

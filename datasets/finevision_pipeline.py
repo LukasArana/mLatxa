@@ -517,7 +517,11 @@ def parse_args():
     parser.add_argument("--token_multiplier", type=float, default=None,
         help="Optional multiplier for target_tokens when counting from instruct_path")
     parser.add_argument("--seed", type=int, default=42)
-    return parser.parse_args()
+    args = parser.parse_args()
+    # defaults use $WORK; argparse doesn't expand it
+    for name in ("dataset_name", "output_path", "images_dir", "tokenizer_path", "instruct_path"):
+        setattr(args, name, os.path.expandvars(getattr(args, name)))
+    return args
 
 
 def main():

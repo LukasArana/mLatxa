@@ -1,11 +1,11 @@
 [
   {
     "dataset_name": "multimodal",
-    "dataset_path": "$SCRATCH/data/leonardo/InstructionDatasets/multimodal/train_cat.jsonl"
+    "dataset_path": "${SCRATCH}/data/leonardo/InstructionDatasets/multimodal/train_cat.jsonl"
   },
   {
     "dataset_name": "cat",
-    "dataset_path": "$SCRATCH/data/leonardo/PretrainDatasets/cat.jsonl",
+    "dataset_path": "${SCRATCH}/data/leonardo/PretrainDatasets/cat.jsonl",
     "columns": { "conversations": "conversations" }
   }
 ]
