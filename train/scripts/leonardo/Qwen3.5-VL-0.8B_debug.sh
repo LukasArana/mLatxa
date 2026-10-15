@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-0.8B_debug
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -7,7 +7,7 @@
 #SBATCH --time 00:30:00
 #SBATCH --account=AIFAC_5C0_261
 #SBATCH --partition=boost_usr_prod
-#SBATCH --qos=boost_qos_dbg
+#SBATCH --qos=normal
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -25,7 +25,8 @@ export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -129,7 +130,7 @@ srun accelerate launch \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
     --model $WORK/baseModels/Qwen3.5-0.8B \
     --save_safetensors false \
-    --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen32b/train/ \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2_qwen35/train/ \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
     --add_non_thinking_prefix true \

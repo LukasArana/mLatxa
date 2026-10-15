@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-9B-debug
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 00:30:00
 #SBATCH --account=AIFAC_5C0_261
-#SBATCH --qos=boost_qos_dbg
+#SBATCH --qos=normal
 #SBATCH --partition=boost_usr_prod
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
@@ -24,7 +24,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8

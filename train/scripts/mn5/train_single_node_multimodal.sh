@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-single-node
+#SBATCH --job-name=train_single_node_multimodal
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -7,7 +7,7 @@
 #SBATCH --time 24:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
-#SBATCH --qos=acc_debug
+#SBATCH --qos=acc_ehpc
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -36,7 +36,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -90,7 +91,7 @@ megatron sft \
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
-        --max_length 4052 \
+        --max_length 4096 \
         --dataloader_num_workers 1 \
         --dataset_num_proc 1 \
         --attention_backend fused \

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Llama3.1-v2
 #SBATCH --nodes=16
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -22,8 +22,9 @@ export WANDB_DIR="$WORK/lukas/wandb_logs"
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
-export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_PROJECT="llama-3.1-finetuning"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -95,7 +96,7 @@ srun accelerate launch \
     --model_type llama \
     --template llama3 \
     --save_safetensors true \
-    --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2_qwen35_llama31/train/ \
     --load_from_cache_file true \
     --add_non_thinking_prefix true \
     --loss_scale ignore_empty_think \

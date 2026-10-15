@@ -38,7 +38,7 @@ split_dataset_ratio: 0.001
 dataset_num_proc: 32
 dataloader_num_workers: 32
 load_from_cache_file: true
-cached_dataset: $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train
+cached_dataset: $WORK/datasets/train/preprocessed/v2_qwen35_qwen3vl/train
 
 freeze_llm: false
 freeze_vit: true

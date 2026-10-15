@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3-VL-32B-Instruct_v2
 #SBATCH --nodes=32
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -95,7 +96,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3-VL-32B-Instruct \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/latxa_v2/qwen32b/train \
+        --cached_dataset $SCRATCH/data/v2_qwen35_qwen3vl/train/ \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --tensor_model_parallel_size 4 \
@@ -115,7 +116,6 @@ srun --cpu-bind=none bash -c '
         --adam_beta2 0.95 \
         --adam_eps 1e-8 \
         --lr_decay_style cosine \
-        --lr 0.00001 \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
         --max_length 8192 \

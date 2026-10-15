@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-9B-Instruct_v1_multimodal_256
 #SBATCH --nodes=64
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -96,8 +97,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-9B \
         --save_safetensors false \
-        --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal_eu.json \
-        --dataset multimodal_eu magpie_qwen hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
+        --cached_dataset $SCRATCH/data/v1_multimodal_eu_256/train/ \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \
@@ -106,6 +106,7 @@ srun --cpu-bind=none bash -c '
         --torch_dtype bfloat16 \
         --micro_batch_size 1 \
         --padding_free true \
+        --packing true \
         --global_batch_size 512 \
         --recompute_granularity full \
         --recompute_num_layers 32 \
@@ -121,7 +122,7 @@ srun --cpu-bind=none bash -c '
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
-        --max_length 4092 \
+        --max_length 4096 \
         --dataloader_num_workers 4 \
         --dataset_num_proc 4 \
         --sequence_parallel true \

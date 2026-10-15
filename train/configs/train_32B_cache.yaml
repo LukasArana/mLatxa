@@ -5,7 +5,7 @@ system: "You are a helpful assistant."
 
 train_type: full
 torch_dtype: bfloat16
-deepspeed: $HOME/mLatxa/train/configs/train_32B_cache.yaml
+deepspeed: $HOME/mLatxa/train/scripts/deepspeed_conf.json
 attn_impl: flash_attention_2
 packing: true
 gradient_checkpointing: true
@@ -28,7 +28,7 @@ learning_rate: 0.00001
 
 # Should be 10813318240 llama tokens. It is 8187712460 qwen tokens
 # Data Handling
-cached_dataset: $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train
+cached_dataset: $WORK/datasets/train/preprocessed/v2_qwen35_qwen3vl/train
 split_dataset_ratio: 0
 dataset_num_proc: 16
 dataloader_num_workers: 4

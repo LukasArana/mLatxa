@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-9B-Instruct_v1_multimodal
 #SBATCH --nodes=32
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -100,12 +101,15 @@ srun --cpu-bind=none bash -c '
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --add_non_thinking_prefix true \
-        --tensor_model_parallel_size 2 \
+        --tensor_model_parallel_size 4 \
         --pipeline_model_parallel_size 1 \
-        --micro_batch_size 8 \
+        --micro_batch_size 1 \
+        --packing true \
         --global_batch_size 512 \
-        --recompute_granularity selective \
-        --num_train_epochs 4 \
+        --recompute_granularity full \
+        --recompute_method uniform \
+        --recompute_num_layers 1 \
+        --num_train_epochs 2 \
         --finetune false \
         --cross_entropy_loss_fusion true \
         --lr 0.00001 \
@@ -120,6 +124,7 @@ srun --cpu-bind=none bash -c '
         --max_length 8192 \
         --dataloader_num_workers 8 \
         --dataset_num_proc 8 \
+        --sequence_parallel true \
         --attention_backend flash \
         --no_load_optim false \
         --no_load_rng false \

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-9B-Instruct_v1_multimodal_1024_swift2
 #SBATCH --nodes=64
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -94,9 +95,9 @@ srun --cpu-bind=none bash -c '
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
-        --model ~/scratch/basemodels/Qwen3.5-9B \
+        --model $SCRATCH/basemodels/Qwen3.5-9B \
         --save_safetensors true \
-        --cached_dataset ~/scratch/data/multimodal_v1_27b_1024/train \
+        --cached_dataset $SCRATCH/data/multimodal_v1_27b_1024/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --add_non_thinking_prefix true \
@@ -125,7 +126,7 @@ srun --cpu-bind=none bash -c '
         --lr_decay_style cosine \
         --bf16 true \
         --fp8_format hybrid \
-        --output_dir ~/scratch/multimodalModels \
+        --output_dir $SCRATCH/multimodalModels \
         --save_steps 150 \
         --eval_steps 150 \
         --sequence_parallel true \

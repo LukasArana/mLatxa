@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-27B-Instruct_v1_multimodal_eu_en
 #SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -25,7 +25,8 @@ export WANDB_DIR="$WORK/lukas/wandb_logs"
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -44,23 +45,11 @@ export PYTHONUNBUFFERED=1                          # flush logs instead of buffe
 export NCCL_DEBUG=WARN                             # which collective stalled (noisy on 256 ranks, but worth it)
 export TORCH_NCCL_TRACE_BUFFER_SIZE=2000           # flight recorder ON
 export TORCH_NCCL_DUMP_ON_TIMEOUT=1                # dump the recorder when a rank times out
-export NCCL_TIMEOUT=1800
-export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=1800
+export NCCL_TIMEOUT=28800
+export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=28800
 export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export TORCH_NCCL_BLOCKING_WAIT=0                  # keep 0 — do NOT also set this to 1, the two modes conflict
 export CUDA_LAUNCH_BLOCKING=0
-
-# Temporarily drop timeouts to 60 seconds for debugging
-export NCCL_TIMEOUT=60
-export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=60
-
-# Enable maximum distributed debugging verbosity
-export TORCH_DISTRIBUTED_DEBUG=INFO
-
-# Tell PyTorch to dump the exact hang location when the 60s timeout hits
-export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
-export TORCH_NCCL_DUMP_ON_TIMEOUT=1
-export TORCH_NCCL_TRACE_BUFFER_SIZE=2000
 
 
 export NCCL_DUMP_DIR="$WORK/lukas/nccl_dump_27"
@@ -99,10 +88,9 @@ export IMAGE_MAX_TOKEN_NUM=0
 export NCCL_IB_HCA=mlx5_0,mlx5_1,mlx5_2,mlx5_3
 export NCCL_IB_GID_INDEX=3
 export NCCL_NET_GDR_LEVEL=2
+export NCCL_NET_DISABLE_INTRA=1
 
 export SWIFT_PATCH_CONV3D=1
-# Diagnostic: disabled to test whether MCore GDN compile path is the hang root.
-# Re-enable if removing it does not change the symptom.
 export SWIFT_USE_MCORE_GDN=1
 
 
@@ -154,7 +142,7 @@ srun accelerate launch \
     --lr_decay_style cosine \
     --output_dir $WORK/multimodalModels \
     --save_steps 250 \
-    --max_length 4192 \
+    --max_length 4096 \
     --dataloader_num_workers 4 \
     --dataset_num_proc 4 \
     --sequence_parallel true \

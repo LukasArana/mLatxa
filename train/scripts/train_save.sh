@@ -22,7 +22,7 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -92,9 +92,9 @@ srun accelerate launch \
     --main_process_port $MASTER_PORT \
     --machine_rank $SLURM_NODEID \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
-    --model /leonardo_work/EUHPC_E04_042/BaseModels/Qwen3-VL-32B-Instruct \
+    --model ${EUHPC_WORK:-/leonardo_work/EUHPC_E04_042}/BaseModels/Qwen3-VL-32B-Instruct \
     --mcore_model $WORK/multimodalModels/v28-20260306-092606/checkpoint-1950 \
-    --cached_dataset $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2_qwen35_qwen3vl/train \
     --finetune false \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
@@ -114,7 +114,6 @@ srun accelerate launch \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --lr 0.00001 \
     --output_dir $WORK/multimodalModels \
     --save_steps 1 \
     --max_length 8192 \

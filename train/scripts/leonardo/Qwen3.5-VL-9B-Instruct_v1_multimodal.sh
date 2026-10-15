@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-9B-Instruct_v1_multimodal
 #SBATCH --nodes=32
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -26,7 +26,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR $TRITON_CACHE_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -108,8 +109,8 @@ srun accelerate launch \
     --tensor_model_parallel_size 4 \
     --pipeline_model_parallel_size 1 \
     --torch_dtype bfloat16 \
-    --micro_batch_size 16 \
-    --packing false \
+    --micro_batch_size 1 \
+    --packing true \
     --padding_free true \
     --global_batch_size 512 \
     --recompute_granularity full \
@@ -125,7 +126,7 @@ srun accelerate launch \
     --adam_beta2 0.95 \
     --adam_eps 1e-8 \
     --lr_decay_style cosine \
-    --output_dir $WORK/multimodalModels/v241-20260615-170621 \
+    --output_dir $WORK/multimodalModels \
     --save_steps 250 \
     --eval_steps 250 \
     --save_strategy steps \

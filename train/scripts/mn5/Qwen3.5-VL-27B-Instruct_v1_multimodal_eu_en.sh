@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-27B-Instruct_v1_multimodal_eu_en
 #SBATCH --nodes=64
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -120,7 +121,7 @@ srun --cpu-bind=none bash -c '
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
-        --max_length 4192 \
+        --max_length 4096 \
         --dataloader_num_workers 4 \
         --dataset_num_proc 4 \
         --sequence_parallel true \

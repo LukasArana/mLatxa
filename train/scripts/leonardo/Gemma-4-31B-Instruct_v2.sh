@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Gemma-4-31B-Instruct_v2
 #SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -22,8 +22,9 @@ export WANDB_DIR="$WORK/lukas/wandb_logs"
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
-export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_PROJECT="gemma-4-finetuning"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -105,7 +106,7 @@ srun accelerate launch \
     $HOME/ms-swift/swift/cli/_megatron/sft.py \
     --model $WORK/baseModels/gemma-4-31B/ \
     --save_safetensors true \
-    --cached_dataset $WORK/datasets/train/preprocessed/v2/qwen32b/train/ \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2_qwen35_gemma4/train/ \
     --load_from_cache_file true \
     --split_dataset_ratio 0.01 \
     --add_non_thinking_prefix true \

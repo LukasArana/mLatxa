@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
-#SBATCH --nodes=4
+#SBATCH --job-name=Gemma-4-E4B-Instruct_v1
+#SBATCH --nodes=16
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
-#SBATCH --qos=acc_debug
+#SBATCH --qos=acc_ehpc
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -33,8 +33,9 @@ export WANDB_DIR="$SCRATCH/lukas/wandb_logs"
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
-export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_PROJECT="gemma-4-E4B-it"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -62,7 +63,7 @@ export MASTER_PORT=9327
 export GLOO_SOCKET_IFNAME=ib0
 export video_min_token_num=0
 export video_max_token_num=0
-export MAX_PIXELS=65536
+export MAX_PIXELS=1003520
 export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 
 # CRITICAL FIX: Ensure user-site packages (like accelerate and z3) are NOT blocked
@@ -81,7 +82,7 @@ srun --cpu-bind=none bash -c '
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
     conda activate megatron-swift
-    export MAX_PIXELS=65536
+    export MAX_PIXELS=1003520
 
     # Use the absolute Python path and call accelerate as a module.
     /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
@@ -94,15 +95,14 @@ srun --cpu-bind=none bash -c '
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
-        --model $SCRATCH/basemodels/Qwen3.5-9B-Instruct \
+        --model $SCRATCH/basemodels/gemma-4-E4B-it/ \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/multimodal_v1/train \
+        --cached_dataset $SCRATCH/data/v1/train/ \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \
         --split_dataset_ratio 0.01 \
         --tensor_model_parallel_size 4 \
-        --pipeline_model_parallel_size 1 \
         --torch_dtype bfloat16 \
         --micro_batch_size 1 \
         --packing false \
@@ -111,35 +111,31 @@ srun --cpu-bind=none bash -c '
         --recompute_granularity full \
         --recompute_num_layers 1 \
         --recompute_method uniform \
-        --num_train_epochs 1 \
+        --num_train_epochs 2 \
         --finetune false \
         --cross_entropy_loss_fusion true \
         --lr 0.00001 \
         --lr_warmup_fraction 0.05 \
         --adam_beta1 0.9 \
-        --use_distributed_optimizer \
         --adam_beta2 0.95 \
         --adam_eps 1e-8 \
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
         --max_length 8192 \
-        --dataloader_num_workers 8 \
-        --dataset_num_proc 8 \
-        --sequence_parallel true \
-        --attention_backend flash \
+        --dataloader_num_workers 4 \
+        --dataset_num_proc 4 \
+        --attention_backend fused \
         --no_load_optim false \
         --no_load_rng false \
         --save_total_limit 2 \
         --overlap_param_gather false \
         --overlap_grad_reduce false \
-        --logging_steps 5 \
+        --logging_steps 10 \
         --no_save_optim false \
-        --freeze_llm true \
+        --freeze_llm false \
         --freeze_vit true \
         --freeze_aligner false \
-        --optimizer_cpu_offload true \
-        --use_precision_aware_optimizer true \
         --fp8_format hybrid \
         --fp8_recipe delayed \
         --fp8_param_gather false

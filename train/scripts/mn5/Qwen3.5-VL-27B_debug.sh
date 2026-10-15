@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=Qwen3.5-VL-27B_debug
 #SBATCH --nodes=2
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -7,7 +7,7 @@
 #SBATCH --time 1:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
-#SBATCH --qos=acc_debug
+#SBATCH --qos=acc_ehpc
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -34,7 +34,8 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -96,7 +97,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-27B \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2/ \
+        --cached_dataset $SCRATCH/data/v2_qwen35/train/ \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --add_non_thinking_prefix true \

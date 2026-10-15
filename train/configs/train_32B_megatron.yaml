@@ -31,7 +31,7 @@ adam_beta1: 0.9
 adam_beta2: 0.95
 
 # Data Handling
-dataset: $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train # FIXED: Was 'cached_dataset'
+dataset: $WORK/datasets/train/preprocessed/v2_qwen35_qwen3vl/train # FIXED: Was 'cached_dataset'
 dataset_test_ratio: 0               # FIXED: Was 'split_dataset_ratio'
 dataset_num_proc: 16
 num_workers: 4                      # FIXED: Was 'dataloader_num_workers'

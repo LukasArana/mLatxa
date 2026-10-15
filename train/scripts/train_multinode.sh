@@ -24,7 +24,7 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
+export WANDB_ENTITY="${WANDB_ENTITY:-USER}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -104,16 +104,14 @@ srun accelerate launch \
     --model_name swift-bot \
     --train_type full \
     --torch_dtype bfloat16 \
-    --cached_dataset $WORK/datasets/train/preprocessed/latxa_v2/qwen32b/train \
+    --cached_dataset $WORK/datasets/train/preprocessed/v2_qwen35_qwen3vl/train \
     --load_from_cache_file true \
     --split_dataset_ratio 0 \
-    --deepspeed $HOME/mLatxa/train/configs/train_32B_cache.yaml \
-    --micro_batch_size 8 \
+    --deepspeed $HOME/mLatxa/train/scripts/deepspeed_conf.json \
     --packing true \
     --num_train_epochs 4 \
     --per_device_train_batch_size 8 \
     --gradient_accumulation_steps 1 \
-    --cross_entropy_loss_fusion true \
     --warmup_ratio 0.1 \
     --weight_decay 0.1 \
     --adam_beta1 0.9 \
