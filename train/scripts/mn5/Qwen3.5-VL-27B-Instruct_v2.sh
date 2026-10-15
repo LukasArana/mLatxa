@@ -96,7 +96,6 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-27B \
         --save_safetensors true \
-        --mcore_model $SCRATCH/multimodalModels/v49-20260609-181358/checkpoint-5750 \
         --cached_dataset $SCRATCH/data/v2/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \

@@ -97,7 +97,6 @@ srun --cpu-bind=none bash -c '
         --machine_rank $SLURM_NODEID \
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-9B \
-        --mcore_model $SCRATCH/multimodalModels/v150-20260825-133949/checkpoint-250 \
         --save_safetensors false \
         --cached_dataset $SCRATCH/data/v1_multimodal_4_eu/train \
         --load_from_cache_file true \

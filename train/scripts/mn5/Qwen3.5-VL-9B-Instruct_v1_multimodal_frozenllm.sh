@@ -94,7 +94,7 @@ srun --cpu-bind=none bash -c '
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
-        --model $SCRATCH/basemodels/Qwen3.5-9B-Instruct \
+        --model $SCRATCH/basemodels/Qwen3.5-9B \
         --save_safetensors true \
         --cached_dataset $SCRATCH/data/multimodal_v1/train \
         --load_from_cache_file true \
