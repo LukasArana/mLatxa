@@ -9,7 +9,7 @@ This file provides guidance to coding agents working with code in this repositor
 The wider repo lives at `mLatxa/` and is split:
 - `mLatxa/datasets/` — dataset construction: FineVision multimodal pipeline + `swift export --to_cached_dataset` to produce the cached datasets the train scripts consume.
 - `mLatxa/train/` — this directory.
-- `mLatxa/models/` — post-training: HF↔mcore conversion (`export_qwen-32_megatron.sh`) and rsync of checkpoints to `xirimiri.ixa.eus` (`move/rsync.sh`).
+- `mLatxa/models/convert/` — post-training mcore→HF conversion on MN5 (`convert_dense.sh`, `convert_moe.sh`).
 
 ## Running training
 
@@ -58,7 +58,7 @@ Every multi-node script repeats the same prologue and you must keep it when addi
 ### Base models and outputs
 - Base weights: `$WORK/baseModels/` (Qwen3.5-9B, Qwen3.5-27B, gemma-4-E4B-it) and `${EUHPC_WORK:-/leonardo_work/EUHPC_E04_042}/BaseModels/` (Qwen3-VL-32B-Instruct, Qwen3.5-9B-Instruct).
 - Checkpoints land in `$WORK/multimodalModels/v{N}-{YYYYMMDD-HHMMSS}/checkpoint-{step}`. To resume / continue training, pass that path via `--mcore_model` (Megatron) with `--finetune false --no_load_optim false --no_load_rng false` — `--model` still points at the original HF weights for tokenizer/config.
-- After training, convert mcore→HF with `bash mLatxa/models/convert.sh <ckpt> [out]` (`models/export_qwen-32_megatron.sh` is the HF→mcore direction) before rsyncing with `REMOTE_USER=<you> sbatch mLatxa/models/move/rsync.sh`.
+- After training, convert mcore→HF with `bash mLatxa/models/convert/convert_dense.sh <ckpt> [out]` or `sbatch mLatxa/models/convert/convert_moe.sh <ckpt> [out]` (MoE, 4 nodes).
 
 ## Conventions when adding a new training script
 

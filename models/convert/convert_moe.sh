@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=swift-multinode
+#SBATCH --job-name=convert_moe
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 1:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
-#SBATCH --qos=acc_debug
+#SBATCH --qos=acc_ehpc
 #SBATCH --output=models/convert/logs/%j.out
 #SBATCH --error=models/convert/logs/%j.err
 
@@ -16,7 +16,7 @@ if [ -z "$1" ]; then
     echo "  <mcore_checkpoint_dir>  Path to the Megatron checkpoint. Point to the PARENT"
     echo "                          directory of iter_xxx (the one containing"
     echo "                          latest_checkpointed_iteration.txt),"
-    echo "                          e.g. \$HOME/scratch/Latxa3.5/v8-xxx/checkpoint-12937"
+    echo "                          e.g. \$SCRATCH/Latxa3.5/v8-xxx/checkpoint-12937"
     echo "  [output_dir]            Where to save HF safetensors (default: <mcore_checkpoint_dir>-hf)"
     exit 1
 fi
@@ -29,7 +29,7 @@ conda activate megatron-swift
 
 MCORE_MODEL="$1"
 OUTPUT_DIR="${2:-${MCORE_MODEL%/}-hf}"
-echo "a"
+
 if [ ! -d "$MCORE_MODEL" ]; then
     echo "Error: checkpoint directory not found: $MCORE_MODEL"
     exit 1
