@@ -218,3 +218,15 @@ AGENTS.md
 datasets/export/README.md
 datasets/export/configs_mn5/a.py
 train/scripts/mn5/launch_wrapper.sh
+
+# SLURM logs, runtime state, backups
+log/
+*.err
+slurm-*.out
+.gradio/
+.gradio_tmp/
+*.bak
+* copy.*
+wandb/
+**/*_API_KEY*.txt
+*.pem
