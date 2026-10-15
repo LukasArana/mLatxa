@@ -97,7 +97,7 @@ srun --cpu-bind=none bash -c '
         --model $SCRATCH/basemodels/Qwen3.5-35B-A3B \
         --mcore_model $SCRATCH/multimodalModels/v159-20260831-180126/checkpoint-3500 \
         --save_safetensors false \
-        --cached_dataset $SCRATCH/data/v2_qwen35/train/ \
+        --cached_dataset $SCRATCH/data/v2/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.1 \
         --add_non_thinking_prefix true \

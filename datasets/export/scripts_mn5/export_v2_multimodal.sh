@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=export_v2_qwen35_qwen3vl
+#SBATCH --job-name=export_v2_multimodal
 #SBATCH --cpus-per-task=16
 #SBATCH --nodes=1
 #SBATCH --account=ehpc678
 #SBATCH --partition=gpp
 #SBATCH --qos=acc_ehpc
 #SBATCH --time=24:00:00
-#SBATCH --output=log/export_v2_qwen35_qwen3vl.out
-#SBATCH --error=log/export_v2_qwen35_qwen3vl.err
+#SBATCH --output=log/export_v2_multimodal.out
+#SBATCH --error=log/export_v2_multimodal.err
 
 # 1. Load modules and activate environment
 module purge
@@ -49,16 +49,16 @@ export video_max_token_num=0
 
 echo $HOME
 
-CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v2_qwen.json)
+CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v2_multimodal.json)
 
 swift export \
-    --model $SCRATCH/basemodels/Qwen3-VL-32B-Instruct \
+    --model $SCRATCH/basemodels/Qwen3.5-9B \
     --custom_dataset_info "$CFG" \
-    --dataset qwen_35_conv aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi \
-    --template qwen \
+    --dataset multimodal aldizkariak berria bog booktegi bopv botha cc-bsc oscar-05 oscar-06 cultura-x egunkaria euscrawl_v1 euscrawl_2023 euscrawl_2025 euscrawl_v2 finepdf fineweb hplt_v1 hplt_v2 opensubtitles parleus wikipedia zelaihandi magpie_qwen magpie_llama \
+    --template qwen3_5 \
     --max_length 8192 \
     --dataset_num_proc 32 \
     --to_cached_dataset \
-    --output_dir $SCRATCH/data/v2_qwen35_qwen3vl/
+    --output_dir $SCRATCH/data/v2_multimodal/
 
 echo "Export complete!"

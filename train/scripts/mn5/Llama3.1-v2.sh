@@ -97,7 +97,7 @@ srun --cpu-bind=none bash -c '
         --model_type llama \
         --template llama3 \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2_qwen35_llama31/train/ \
+        --cached_dataset $SCRATCH/data/v2_llama31/train \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \

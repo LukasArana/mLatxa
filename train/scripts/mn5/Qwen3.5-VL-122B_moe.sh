@@ -97,7 +97,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-122B-A10B \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2_qwen35/train/ \
+        --cached_dataset $SCRATCH/data/v2/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --add_non_thinking_prefix true \

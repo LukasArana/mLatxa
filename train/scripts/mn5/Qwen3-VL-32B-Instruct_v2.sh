@@ -95,7 +95,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3-VL-32B-Instruct \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2_qwen35_qwen3vl/train/ \
+        --cached_dataset $SCRATCH/data/v2_qwen3vl/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --tensor_model_parallel_size 4 \

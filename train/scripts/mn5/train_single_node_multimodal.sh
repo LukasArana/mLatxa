@@ -64,7 +64,7 @@ echo "Launching single-node training ($NNODES node, $GPUS_PER_NODE GPUs)"
 megatron sft \
         --model $SCRATCH/basemodels/gemma-4-12B-it/ \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/multimodal_v1_eu_512/train/ \
+        --cached_dataset $SCRATCH/data/v1/train $SCRATCH/data/multimodal_eu_124/train \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \

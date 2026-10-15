@@ -65,7 +65,7 @@ megatron sft \
         --model_type llama \
         --template llama3 \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2_qwen35_llama31/train/ \
+        --cached_dataset $SCRATCH/data/v2_llama31/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --tensor_model_parallel_size 1 \

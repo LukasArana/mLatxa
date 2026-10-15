@@ -62,7 +62,7 @@ export MASTER_PORT=9327
 export GLOO_SOCKET_IFNAME=ib0
 export video_min_token_num=0
 export video_max_token_num=0
-export IMAGE_MAX_TOKEN_NUM=128
+export IMAGE_MAX_TOKEN_NUM=124
 export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 
 # CRITICAL FIX: Ensure user-site packages (like accelerate and z3) are NOT blocked
@@ -83,7 +83,7 @@ srun --cpu-bind=none bash -c '
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
     conda activate megatron-swift
-    export IMAGE_MAX_TOKEN_NUM=128
+    export IMAGE_MAX_TOKEN_NUM=124
 
     # Use the absolute Python path and call accelerate as a module.
     /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
@@ -98,7 +98,7 @@ srun --cpu-bind=none bash -c '
         $HOME/MS-Swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-9B \
         --save_safetensors false \
-        --cached_dataset $SCRATCH/data/multimodal_v1_eu_en_1024/train/ \
+        --cached_dataset $SCRATCH/data/v1/train $SCRATCH/data/multimodal_124/train $SCRATCH/data/multimodal_eu_124/train \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \
