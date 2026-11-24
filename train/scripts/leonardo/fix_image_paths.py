@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """Rewrite MN5 image paths in cached multimodal datasets copied to Leonardo.
 
-The MN5 caches store absolute image paths under
-/home/ehu/$MN5_USER/scratch/data/leonardo/images_v1/, which were copied from
-Leonardo's finevisionProcessed/images/ (same file names). This points them back
-at the Leonardo copy. Idempotent: a dataset with a .leonardo_paths marker is skipped.
+The MN5 caches store absolute image paths like
+/home/ehu/<mn5 user>/scratch/data/leonardo/images_v1/<hash>.png, which were copied
+from Leonardo's finevisionProcessed/images/ (same file names). This replaces
+everything up to ".../images_v1/" with the Leonardo folder, so it does not need
+to know the MN5 user. Idempotent: a dataset with a .leonardo_paths marker is skipped.
 
-    MN5_USER=<mn5 user> python fix_image_paths.py <cache_dir/train> [<cache_dir/train> ...]
+    python fix_image_paths.py <cache_dir/train> [<cache_dir/train> ...]
 """
 import json
 import os
@@ -20,16 +21,21 @@ from tqdm.auto import tqdm
 
 enable_progress_bar()  # map / save_to_disk show their own per-step bars
 
-OLD = f"/home/ehu/{os.environ['MN5_USER']}/scratch/data/leonardo/images_v1/"  # MN5 home of whoever exported the caches
+OLD = "/images_v1/"  # last folder of the MN5 image paths; everything up to it is replaced
 NEW = "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/images/"
 MARKER = ".leonardo_paths"
+
+
+def to_leonardo(p):
+    k = p.find(OLD)
+    return NEW + p[k + len(OLD):] if k >= 0 else p
 
 
 def fix(batch):
     out = []
     for imgs in batch["images"]:
         if imgs:
-            imgs = [dict(i, path=i["path"].replace(OLD, NEW, 1)) if i.get("path") else i for i in imgs]
+            imgs = [dict(i, path=to_leonardo(i["path"])) if i.get("path") else i for i in imgs]
         out.append(imgs)
     return {"images": out}
 
@@ -64,6 +70,6 @@ for path in overall:
     old = path + ".mn5_paths"
     os.rename(path, old)
     os.rename(tmp, path)
-    open(os.path.join(path, MARKER), "w").write(f"{OLD} -> {NEW}\n")
+    open(os.path.join(path, MARKER), "w").write(f"*{OLD} -> {NEW}\n")
     shutil.rmtree(old)
     tqdm.write(f"{path}: {len(new)} rows rewritten, {len(paths)} sampled image paths exist")

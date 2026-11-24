@@ -48,4 +48,4 @@ for d in "${DATASETS[@]}"; do
 done
 echo "All done: ${DATASETS[*]}"
 echo "NEXT (on Leonardo): the multimodal caches still hold MN5 image paths. Run, in the training env:"
-echo "  MN5_USER=<mn5 user> python ~/mLatxa/train/scripts/leonardo/fix_image_paths.py $LEO_DST/{multimodal_v1,v1_multimodal_eu_en,multimodal_124,multimodal_eu_124}/train"
+echo "  python ~/mLatxa/train/scripts/leonardo/fix_image_paths.py $LEO_DST/{multimodal_v1,v1_multimodal_eu_en,multimodal_124,multimodal_eu_124}/train"
