@@ -30,10 +30,11 @@ for d in "${DATASETS[@]}"; do
     rsync -a --partial --info=progress2 "$MN5_SRC/$d/train/" "$STAGING/$d/train/"
 
     echo "=== $d: local -> Leonardo"
-    # Leonardo has rsync 3.1.3 (no --mkpath), so create the target dir first.
-    $LEO_SSH "$LEO_HOST" "mkdir -p '$LEO_DST/$d/train'"
-    rsync -a --partial --info=progress2 -e "$LEO_SSH" \
-        "$STAGING/$d/train/" "$LEO_HOST:$LEO_DST/$d/train/"
+    # Leonardo has rsync 3.1.3 (no --mkpath) and the data node only allows
+    # rsync/scp (no mkdir), so --relative with the "/./" anchor makes rsync
+    # create $LEO_DST/$d/train itself.
+    rsync -a --relative --partial --info=progress2 -e "$LEO_SSH" \
+        "$STAGING/./$d/train/" "$LEO_HOST:$LEO_DST/"
 
     # Verify: a checksum dry-run must report nothing left to transfer.
     pending=$(rsync -a --checksum --dry-run --itemize-changes -e "$LEO_SSH" \
