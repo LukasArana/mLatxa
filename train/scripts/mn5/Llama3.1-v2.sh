@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Llama3.1-v2
+#SBATCH --job-name=swift-multinode
 #SBATCH --nodes=16
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -33,8 +33,7 @@ export WANDB_DIR="$SCRATCH/lukas/wandb_logs"
 mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
-export WANDB_PROJECT="llama-3.1-finetuning"
-export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
+export WANDB_PROJECT="qwen3-vl-finetuning"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -80,10 +79,10 @@ srun --cpu-bind=none bash -c '
 
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-    conda activate megatron-swift
+    conda activate /gpfs/projects/ehu26/envs/megatron-swift
 
     # Use the absolute Python path and call accelerate as a module.
-    /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
+    /gpfs/projects/ehu26/envs/megatron-swift/bin/python -m accelerate.commands.launch \
         --num_processes $TOTAL_PROCESSES \
         --num_machines $NNODES \
         --mixed_precision bf16 \
@@ -92,12 +91,12 @@ srun --cpu-bind=none bash -c '
         --main_process_ip $MAIN_PROCESS_IP \
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
-        $HOME/MS-Swift/swift/cli/_megatron/sft.py \
+        /gpfs/projects/ehu26/ms-swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Llama3.1 \
         --model_type llama \
         --template llama3 \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v2_llama31/train \
+        --cached_dataset $SCRATCH/data/v2/qwen32b/train \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \

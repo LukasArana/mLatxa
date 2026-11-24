@@ -1,22 +1,24 @@
 #!/bin/bash
+# mLatxa grid run (2 epochs, max_length 8192). Replaced on 2026-11-19; previous version saved as Qwen3.5-VL-27B-Instruct_v2.sh.bak-20261119 if it existed.
+# Generated 2026-11-19 from Qwen3.5-VL-27B-Instruct_v2_multimodal_en_124.sh (run v10); only job name, caches and image cap changed.
 #SBATCH --job-name=Qwen3.5-VL-27B-Instruct_v2
-#SBATCH --nodes=32
+#SBATCH --nodes=64
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --time 3-00:00:00
-#SBATCH --account=ehpc678
+#SBATCH --time 48:00:00
+#SBATCH --account=ehu26
 #SBATCH --partition=acc
-#SBATCH --qos=acc_ehpc
+#SBATCH --qos=acc_resa
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
-
 # Load modules on the head node
 module purge
 module load miniforge cuda/12.6 cudnn
 
-# Activate env on the head node (essential for Z3 path lookup)
+
+nvidia-smi
 
 export SCRATCH=~/scratch
 
@@ -62,7 +64,7 @@ export MASTER_PORT=9327
 export GLOO_SOCKET_IFNAME=ib0
 export video_min_token_num=0
 export video_max_token_num=0
-export IMAGE_MAX_TOKEN_NUM=0
+export IMAGE_MAX_TOKEN_NUM=124
 export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 
 # CRITICAL FIX: Ensure user-site packages (like accelerate and z3) are NOT blocked
@@ -80,11 +82,11 @@ srun --cpu-bind=none bash -c '
 
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-    conda activate megatron-swift
-    export IMAGE_MAX_TOKEN_NUM=0
+    conda activate /gpfs/projects/ehu26/envs/megatron-swift
+    export IMAGE_MAX_TOKEN_NUM=124
 
     # Use the absolute Python path and call accelerate as a module.
-    /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
+    /gpfs/projects/ehu26/envs/megatron-swift/bin/python -m accelerate.commands.launch \
         --num_processes $TOTAL_PROCESSES \
         --num_machines $NNODES \
         --mixed_precision bf16 \
@@ -93,22 +95,21 @@ srun --cpu-bind=none bash -c '
         --main_process_ip $MAIN_PROCESS_IP \
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
-        $HOME/MS-Swift/swift/cli/_megatron/sft.py \
+        /gpfs/projects/ehu26/ms-swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-27B \
-        --save_safetensors true \
+        --save_safetensors false \
         --cached_dataset $SCRATCH/data/v2/train \
         --load_from_cache_file true \
         --split_dataset_ratio 0.01 \
         --add_non_thinking_prefix true \
         --tensor_model_parallel_size 4 \
-        --pipeline_model_parallel_size 1 \
-        --micro_batch_size 2 \
+        --micro_batch_size 1 \
         --packing true \
         --global_batch_size 512 \
         --recompute_granularity full \
         --recompute_method uniform \
         --recompute_num_layers 1 \
-        --num_train_epochs 4 \
+        --num_train_epochs 2 \
         --finetune false \
         --cross_entropy_loss_fusion true \
         --lr 0.00001 \
@@ -119,7 +120,7 @@ srun --cpu-bind=none bash -c '
         --adam_eps 1e-8 \
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
-        --save_steps 250 \
+        --save_steps 500 \
         --max_length 8192 \
         --dataloader_num_workers 8 \
         --dataset_num_proc 8 \
@@ -139,8 +140,4 @@ srun --cpu-bind=none bash -c '
         --use_distributed_optimizer true \
         --use_precision_aware_optimizer true \
         --optimizer_cpu_offload true \
-        --bf16 true \
-        --fp8_format hybrid \
-        --fp8_recipe delayed \
-        --fp8_param_gather false
 '

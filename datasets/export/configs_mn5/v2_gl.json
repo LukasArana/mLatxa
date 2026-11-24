@@ -1,0 +1,79 @@
+[
+  {
+    "dataset_name": "gl_00",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/1/citius-nos_cat-1_part__00000.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_01",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/2/citius-nos_cat-2_part__00000.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_02",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00000.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_03",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00001.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_04",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00002.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_05",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00003.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_06",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00004.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_07",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00005.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "gl_08",
+    "dataset_path": "$SCRATCH/data/PretrainDatasets/gl-2b/3-1.5b/citius-nos_cat-3_part__00006.train.jsonl",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  {
+    "dataset_name": "magpie_qwen",
+    "dataset_path": "$SCRATCH/data/leonardo/InstructionDatasets/magpie.qwen3.32b.en.noreasoning.jsonl",
+    "columns": {
+      "conversations": "conversations"
+    }
+  },
+  {
+    "dataset_name": "magpie_llama",
+    "dataset_path": "$SCRATCH/data/leonardo/InstructionDatasets/Magpie-Llama-3.1-70B-Instruct-Filtered-1M.jsonl",
+    "columns": {
+      "conversations": "conversations"
+    }
+  }
+]

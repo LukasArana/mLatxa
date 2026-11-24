@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=train_single_node_multimodal
+#SBATCH --job-name=swift-single-node
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=80
 #SBATCH --ntasks-per-node=1
@@ -7,7 +7,7 @@
 #SBATCH --time 24:00:00
 #SBATCH --account=ehpc678
 #SBATCH --partition=acc
-#SBATCH --qos=acc_ehpc
+#SBATCH --qos=acc_debug
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -18,7 +18,7 @@ module load miniforge cuda/12.6 cudnn
 
 # Activate env
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 
 export SCRATCH=~/scratch
 
@@ -36,7 +36,6 @@ mkdir -p $TMPDIR $HF_HOME $MODELSCOPE_CACHE $WANDB_DIR
 
 export WANDB_MODE=offline
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_NAME="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -64,7 +63,7 @@ echo "Launching single-node training ($NNODES node, $GPUS_PER_NODE GPUs)"
 megatron sft \
         --model $SCRATCH/basemodels/gemma-4-12B-it/ \
         --save_safetensors true \
-        --cached_dataset $SCRATCH/data/v1/train $SCRATCH/data/multimodal_eu_124/train \
+        --cached_dataset $SCRATCH/data/multimodal_v1_eu_512/train/ \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \
@@ -90,7 +89,7 @@ megatron sft \
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
-        --max_length 4096 \
+        --max_length 4052 \
         --dataloader_num_workers 1 \
         --dataset_num_proc 1 \
         --attention_backend fused \

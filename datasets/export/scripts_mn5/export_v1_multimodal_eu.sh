@@ -6,19 +6,18 @@
 #SBATCH --partition=gpp
 #SBATCH --qos=acc_ehpc
 #SBATCH --time=48:00:00
-#SBATCH --output=log/export_v1_multimodal_eu.out
-#SBATCH --error=log/export_v1_multimodal_eu.err
+#SBATCH --output=log/v1_multimodal_eu_128.out
+#SBATCH --error=log/v1_multimodal_eu_128.err
 
 # 1. Load modules and activate environment
 module purge
 module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
-set -eo pipefail
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 
 # 2. Create cache directories
-export SCRATCH=~/scratch
+SCRATCH=~/scratch
 mkdir -p $SCRATCH/hf_cache
 mkdir -p $SCRATCH/modelscope_cache
 mkdir -p $SCRATCH/tmp
@@ -49,11 +48,9 @@ export video_max_token_num=0
 
 echo $HOME
 
-CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal_eu.json)
-
 swift export \
-    --model $SCRATCH/basemodels/Qwen3.5-9B \
-    --custom_dataset_info "$CFG" \
+    --model ~/scratch/basemodels/Qwen3.5-9B \
+    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal_eu.json \
     --dataset multimodal_eu magpie_qwen hplt_v1 booktegi cultura-x egunkaria wikipedia euscrawl_v1.1 oscar \
     --template qwen3_5 \
     --max_length 8192 \

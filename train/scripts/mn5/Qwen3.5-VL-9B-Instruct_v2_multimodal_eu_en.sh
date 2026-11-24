@@ -5,9 +5,9 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --time 24:00:00
-#SBATCH --account=ehpc678
+#SBATCH --account=ehu26
 #SBATCH --partition=acc
-#SBATCH --qos=acc_ehpc
+#SBATCH --qos=acc_resa
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 #SBATCH --exclusive
@@ -62,7 +62,7 @@ export MASTER_PORT=9327
 export GLOO_SOCKET_IFNAME=ib0
 export video_min_token_num=0
 export video_max_token_num=0
-export IMAGE_MAX_TOKEN_NUM=124
+export IMAGE_MAX_TOKEN_NUM=512
 export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK
 
 # CRITICAL FIX: Ensure user-site packages (like accelerate and z3) are NOT blocked
@@ -70,8 +70,6 @@ unset PYTHONNOUSERSITE
 
 echo "Launching $NNODES-node training on Head Node: $MAIN_PROCESS_IP at Port: $MASTER_PORT"
 echo "Total processes: $TOTAL_PROCESSES"
-# Resume from Leonardo checkpoint (rsync to MN5 first):
-# --mcore_model $SCRATCH/multimodalModels/v338-20260723-211919/checkpoint-2500
 
 # --- Training Launch ---
 # Notice the single quotes ('...') around the bash -c command.
@@ -82,8 +80,8 @@ srun --cpu-bind=none bash -c '
 
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-    conda activate megatron-swift
-    export IMAGE_MAX_TOKEN_NUM=124
+    conda activate /gpfs/projects/ehu26/envs/megatron-swift
+    export IMAGE_MAX_TOKEN_NUM=512
 
     # Use the absolute Python path and call accelerate as a module.
     /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
@@ -95,10 +93,10 @@ srun --cpu-bind=none bash -c '
         --main_process_ip $MAIN_PROCESS_IP \
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
-        $HOME/MS-Swift/swift/cli/_megatron/sft.py \
+        /gpfs/projects/ehu26/ms-swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-9B \
         --save_safetensors false \
-        --cached_dataset $SCRATCH/data/v2_multimodal_eu_en/train \
+        --cached_dataset $SCRATCH/data/v2/train $SCRATCH/data/multimodal_eu_512/train $SCRATCH/data/multimodal_512/train \
         --load_from_cache_file true \
         --add_non_thinking_prefix true \
         --loss_scale ignore_empty_think \
@@ -110,7 +108,7 @@ srun --cpu-bind=none bash -c '
         --padding_free true \
         --global_batch_size 512 \
         --recompute_granularity full \
-        --recompute_num_layers 16 \
+        --recompute_num_layers 1 \
         --recompute_method uniform \
         --num_train_epochs 2 \
         --finetune false \
@@ -123,7 +121,7 @@ srun --cpu-bind=none bash -c '
         --lr_decay_style cosine \
         --output_dir $SCRATCH/multimodalModels \
         --save_steps 250 \
-        --max_length 4096 \
+        --max_length 8192 \
         --dataloader_num_workers 4 \
         --dataset_num_proc 4 \
         --sequence_parallel true \
@@ -138,7 +136,4 @@ srun --cpu-bind=none bash -c '
         --freeze_llm false \
         --freeze_vit true \
         --freeze_aligner false \
-        --fp8_format hybrid \
-        --fp8_recipe delayed \
-        --fp8_param_gather false
 '

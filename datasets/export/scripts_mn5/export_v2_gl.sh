@@ -1,20 +1,20 @@
 #!/bin/bash
-#SBATCH --job-name=export_cat_multimodal
+#SBATCH --job-name=export_v2_gl
 #SBATCH --cpus-per-task=16
 #SBATCH --nodes=1
-#SBATCH --account=ehpc678
-#SBATCH --partition=gpp
-#SBATCH --qos=acc_ehpc
+#SBATCH --account=ehu26
+#SBATCH --partition=acc
+#SBATCH --qos=acc_resa
 #SBATCH --time=24:00:00
-#SBATCH --output=log/export_cat_multimodal.out
-#SBATCH --error=log/export_cat_multimodal.err
+#SBATCH --output=log/export_v2_gl.out
+#SBATCH --error=log/export_v2_gl.err
 
 # 1. Load modules and activate environment
 module purge
 module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 set -eo pipefail
 
 # 2. Create cache directories
@@ -49,16 +49,16 @@ export video_max_token_num=0
 
 echo $HOME
 
-CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/cat_multimodal.json)
+CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v2_gl.json)
 
 swift export \
     --model $SCRATCH/basemodels/Qwen3.5-9B \
     --custom_dataset_info "$CFG" \
-    --dataset multimodal cat \
+    --dataset gl_00 gl_01 gl_02 gl_03 gl_04 gl_05 gl_06 gl_07 gl_08 magpie_qwen magpie_llama \
     --template qwen3_5 \
     --max_length 8192 \
     --dataset_num_proc 32 \
     --to_cached_dataset \
-    --output_dir $SCRATCH/data/cat_multimodal_cat/
+    --output_dir $SCRATCH/data/v2_gl/
 
 echo "Export complete!"

@@ -8,12 +8,10 @@ from transformers.models.qwen2_vl.image_processing_qwen2_vl import smart_resize
 parser = argparse.ArgumentParser()
 parser.add_argument("dataset", help="Path to the dataset saved with save_to_disk")
 parser.add_argument("max_image_tokens", type=int, help="Max tokens per image (must match the ms-swift export)")
-parser.add_argument("--model", default=os.path.join(os.environ.get("SCRATCH", os.path.expanduser("~/scratch")), "basemodels/Qwen3.5-9B"),
-                    help="Model whose processor was used for the export")
 args = parser.parse_args()
 print(args.dataset)
 ds = load_from_disk(args.dataset)
-processor = AutoProcessor.from_pretrained(args.model)
+processor = AutoProcessor.from_pretrained("$SCRATCH/basemodels/Qwen3.5-9B")
 tok, ip = processor.tokenizer, processor.image_processor
 
 MIN_IMAGE_TOKENS = 4                            # IMAGE_MIN_TOKEN_NUM = 4 for Qwen3.5 in ms-swift

@@ -1,23 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=export_multimodal_512
+#SBATCH --job-name=export_v1_multimodal_eu
 #SBATCH --cpus-per-task=64
 #SBATCH --nodes=1
 #SBATCH --account=ehu26
 #SBATCH --partition=gpp
 #SBATCH --qos=acc_resa
 #SBATCH --time=72:00:00
-#SBATCH --output=log/export_multimodal_512.out
-#SBATCH --error=log/export_multimodal_512.err
+#SBATCH --output=log/multimodal_512.out
+#SBATCH --error=log/multimodal_512.err
 
 # 1. Load modules and activate environment
 module purge
 module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
-set -eo pipefail
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 # 2. Create cache directories
-export SCRATCH=~/scratch
+SCRATCH=~/scratch
 mkdir -p $SCRATCH/hf_cache
 mkdir -p $SCRATCH/modelscope_cache
 mkdir -p $SCRATCH/tmp
@@ -48,11 +47,9 @@ export video_max_token_num=0
 
 echo $HOME
 
-CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal.json)
-
 swift export \
     --model $SCRATCH/basemodels/Qwen3.5-9B \
-    --custom_dataset_info "$CFG" \
+    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal.json \
     --dataset multimodal \
     --template qwen3_5 \
     --max_length 8192 \
