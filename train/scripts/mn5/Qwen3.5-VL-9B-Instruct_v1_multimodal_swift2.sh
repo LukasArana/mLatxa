@@ -81,12 +81,12 @@ srun --cpu-bind=none bash -c '
 
     # Initialize Conda cleanly ON THE WORKER NODE
     source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-    conda activate megatron-swift
+    conda activate /gpfs/projects/ehu26/envs/megatron-swift
     export IMAGE_MAX_TOKEN_NUM=128
     IMAGE_MAX_TOKEN_NUM=128
 
     # Use the absolute Python path and call accelerate as a module.
-    /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/envs/megatron-swift/bin/python -m accelerate.commands.launch \
+    /gpfs/projects/ehu26/envs/megatron-swift/bin/python -m accelerate.commands.launch \
         --num_processes $TOTAL_PROCESSES \
         --num_machines $NNODES \
         --mixed_precision bf16 \
@@ -95,7 +95,7 @@ srun --cpu-bind=none bash -c '
         --main_process_ip $MAIN_PROCESS_IP \
         --main_process_port $MASTER_PORT \
         --machine_rank $SLURM_NODEID \
-        $HOME/MS-Swift/swift/cli/_megatron/sft.py \
+        /gpfs/projects/ehu26/ms-swift/swift/cli/_megatron/sft.py \
         --model $SCRATCH/basemodels/Qwen3.5-9B \
         --mcore_model $SCRATCH/multimodalModels/v89-20260624-133209/checkpoint-150 \
         --save_safetensors true \

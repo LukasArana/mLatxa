@@ -18,7 +18,7 @@ module load miniforge cuda/12.6 cudnn
 
 # Activate env
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 
 export SCRATCH=~/scratch
 

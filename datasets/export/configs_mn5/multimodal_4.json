@@ -1,0 +1,6 @@
+[
+  {
+    "dataset_name": "multimodal_4",
+    "dataset_path": "${SCRATCH}/data/leonardo/InstructionDatasets/multimodal/train_multimodal4_fixed.jsonl"
+  }
+]

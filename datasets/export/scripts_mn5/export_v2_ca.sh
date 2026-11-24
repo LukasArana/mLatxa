@@ -1,23 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=export_v2_multimodal
+#SBATCH --job-name=export_v2_ca
 #SBATCH --cpus-per-task=16
 #SBATCH --nodes=1
-#SBATCH --account=ehpc678
-#SBATCH --partition=gpp
-#SBATCH --qos=acc_ehpc
+#SBATCH --account=ehu26
+#SBATCH --partition=acc
+#SBATCH --qos=acc_resa
 #SBATCH --time=24:00:00
-#SBATCH --output=log/log_v2_multimodal_mn5.out
-#SBATCH --error=log/log_v2_multimodal_mn5.err
+#SBATCH --output=log/export_v2_ca.out
+#SBATCH --error=log/export_v2_ca.err
 
 # 1. Load modules and activate environment
 module purge
 module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
+set -eo pipefail
 
 # 2. Create cache directories
-SCRATCH=~/scratch
+export SCRATCH=~/scratch
 mkdir -p $SCRATCH/hf_cache
 mkdir -p $SCRATCH/modelscope_cache
 mkdir -p $SCRATCH/tmp
@@ -30,7 +31,6 @@ export TMPDIR="$SCRATCH/tmp"
 
 # 4. WANDB Configuration
 export WANDB_PROJECT="qwen3-vl-finetuning"
-export WANDB_ENTITY="USER"
 export WANDB_DIR="$SCRATCH/wandb_logs"
 mkdir -p $WANDB_DIR
 
@@ -49,14 +49,16 @@ export video_max_token_num=0
 
 echo $HOME
 
+CFG=$(python $HOME/mLatxa/datasets/export/render_config.py $HOME/mLatxa/datasets/export/configs_mn5/v2_ca.json)
+
 swift export \
-    --model ~/scratch/basemodels/Qwen3.5-9B \
-    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/cat_multimodal.json \
-    --dataset multimodal cat \
-    --template qwen \
+    --model $SCRATCH/basemodels/Qwen3.5-9B \
+    --custom_dataset_info "$CFG" \
+    --dataset ca_00 ca_01 ca_02 ca_03 ca_04 ca_05 ca_06 magpie_qwen magpie_llama \
+    --template qwen3_5 \
     --max_length 8192 \
     --dataset_num_proc 32 \
     --to_cached_dataset \
-    --output_dir $SCRATCH/data/cat_multimodal_cat/
+    --output_dir $SCRATCH/data/v2_ca/
 
 echo "Export complete!"

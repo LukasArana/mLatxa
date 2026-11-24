@@ -1,0 +1,2 @@
+    source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
+    conda activate megatron-swift

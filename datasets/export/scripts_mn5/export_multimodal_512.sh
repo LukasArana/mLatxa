@@ -1,21 +1,20 @@
 #!/bin/bash
-#SBATCH --job-name=export_v2_multimodal
-#SBATCH --cpus-per-task=16
+#SBATCH --job-name=export_v1_multimodal_eu
+#SBATCH --cpus-per-task=64
 #SBATCH --nodes=1
-#SBATCH --account=ehpc678
+#SBATCH --account=ehu26
 #SBATCH --partition=gpp
-#SBATCH --qos=acc_ehpc
-#SBATCH --time=24:00:00
-#SBATCH --output=log/log_v2_multimodal_mn5.out
-#SBATCH --error=log/log_v2_multimodal_mn5.err
+#SBATCH --qos=acc_resa
+#SBATCH --time=72:00:00
+#SBATCH --output=log/multimodal_512.out
+#SBATCH --error=log/multimodal_512.err
 
 # 1. Load modules and activate environment
 module purge
 module load miniforge cuda/12.6 cudnn
 
 source /gpfs/apps/MN5/ACC/MINIFORGE/24.3.0-0/etc/profile.d/conda.sh
-conda activate megatron-swift
-
+conda activate /gpfs/projects/ehu26/envs/megatron-swift
 # 2. Create cache directories
 SCRATCH=~/scratch
 mkdir -p $SCRATCH/hf_cache
@@ -43,20 +42,20 @@ export Z3_LIB_PATH=$(python -c 'import z3, os; print(os.path.join(z3.__path__[0]
 export LD_LIBRARY_PATH="$Z3_LIB_PATH:$LD_LIBRARY_PATH"
 
 # 7. Export settings
-export IMAGE_MAX_TOKEN_NUM=124
+export IMAGE_MAX_TOKEN_NUM=512
 export video_min_token_num=0
 export video_max_token_num=0
 
 echo $HOME
 
 swift export \
-    --model ~/scratch/basemodels/Qwen3.5-9B \
-    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/gal_multimodal.json \
-    --dataset multimodal gal \
-    --template qwen \
+    --model $SCRATCH/basemodels/Qwen3.5-9B \
+    --custom_dataset_info $HOME/mLatxa/datasets/export/configs_mn5/v1_multimodal.json \
+    --dataset multimodal \
+    --template qwen3_5 \
     --max_length 8192 \
-    --dataset_num_proc 32 \
+    --dataset_num_proc 128 \
     --to_cached_dataset \
-    --output_dir $SCRATCH/data/gal_multimodal/
+    --output_dir $SCRATCH/data/multimodal_512/
 
 echo "Export complete!"
