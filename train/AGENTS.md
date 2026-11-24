@@ -53,12 +53,18 @@ Every multi-node script repeats the same prologue and you must keep it when addi
 - NCCL/IB tuning required to avoid hangs on Boost: `NCCL_IB_HCA=mlx5_0..3`, `NCCL_IB_GID_INDEX=3`, `NCCL_NET_GDR_LEVEL=2`, `NCCL_NET_DISABLE_INTRA=1`, `GLOO_SOCKET_IFNAME=ib0`. Multimodal jobs raise `NCCL_TIMEOUT` / `TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC` to 28800–57600 because dataset warm-up takes a long time.
 - ms-swift Qwen3-VL knobs: `SWIFT_PATCH_CONV3D=1` (always), `SWIFT_USE_MCORE_GDN=1` for Megatron, `video_min_token_num=0`, `video_max_token_num=0`, `MAX_PIXELS=1003520`.
 - Rendezvous: derive `MAIN_PROCESS_IP` from `scontrol show hostnames`, fixed `MASTER_PORT=9327`, `--rdzv_backend c10d`, `--machine_rank $SLURM_NODEID`.
-- SLURM header: `--account=AIFAC_5C0_261`, `--partition=boost_usr_prod`, `--gres=gpu:4`, `--exclusive`, `--ntasks-per-node=1` (the single task fans out via `accelerate launch --num_processes`). `--job-name` is the script name and is reused as `WANDB_NAME`. Don't use `boost_qos_dbg` (2 nodes / 30 min max); smoke tests run on the normal QoS.
+- SLURM header: `--account=AIFAC_S07_127` (the older `AIFAC_5C0_261` project ended 2026-11-02 and can no longer run jobs; its work area `/leonardo_work/AIFAC_5C0_261` still holds the envs, `baseModels/` and old caches, so ported scripts reference it as `$OLD_WORK`), `--partition=boost_usr_prod`, `--gres=gpu:4`, `--exclusive`, `--ntasks-per-node=1` (the single task fans out via `accelerate launch --num_processes`). `--job-name` is the script name and is reused as `WANDB_NAME`. Don't use `boost_qos_dbg` (2 nodes / 30 min max); smoke tests run on the normal QoS.
 
 ### Base models and outputs
 - Base weights: `$WORK/baseModels/` (Qwen3.5-9B, Qwen3.5-27B, gemma-4-E4B-it) and `${EUHPC_WORK:-/leonardo_work/EUHPC_E04_042}/BaseModels/` (Qwen3-VL-32B-Instruct, Qwen3.5-9B-Instruct).
 - Checkpoints land in `$WORK/multimodalModels/v{N}-{YYYYMMDD-HHMMSS}/checkpoint-{step}`. To resume / continue training, pass that path via `--mcore_model` (Megatron) with `--finetune false --no_load_optim false --no_load_rng false` — `--model` still points at the original HF weights for tokenizer/config.
 - After training, convert mcore→HF with `bash mLatxa/models/convert/convert_dense.sh <ckpt> [out]` or `sbatch mLatxa/models/convert/convert_moe.sh <ckpt> [out]` (MoE, 4 nodes).
+
+### MN5 runs ported to Leonardo
+The Leonardo scripts that share a name with a `scripts/mn5/` script (e.g. `Qwen3.5-VL-9B-Instruct_v2_ca.sh`) were generated from the MN5 version: training args verbatim, only the cluster boilerplate and paths replaced (`save_steps` capped at 250). They differ from older Leonardo scripts in three ways:
+- Data comes from `$WORK/lukas/data_mn5/<cache>/train`, copied by `MN5_USER=<mn5 user> sbatch pull_data_from_mn5.sbatch` from `scripts/leonardo/` (self-chaining `lrd_all_serial` rsync from `transfer1.bsc.es` using `~/.ssh/mn5_transfer`). Multimodal caches store absolute MN5 image paths; that job rewrites them to Leonardo's `finevisionProcessed/images/` with `fix_image_paths.py`.
+- Each run writes to `$WORK/lukas/multimodalModels/<job-name>/` and auto-resumes from the newest checkpoint there, because Leonardo caps jobs at 24h (MN5 runs are 1–3 days). Submit as a chain with `bash scripts/leonardo/submit_chain.sh <script> <N>` (`--dependency=singleton`).
+- MN5 node counts follow what was actually queued (several 9B runs were submitted with `-N 32` although the MN5 file says 64).
 
 ## Conventions when adding a new training script
 
