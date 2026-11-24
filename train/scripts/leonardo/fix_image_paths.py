@@ -15,6 +15,10 @@ import shutil
 import sys
 
 from datasets import load_from_disk
+from datasets.utils.logging import enable_progress_bar
+from tqdm.auto import tqdm
+
+enable_progress_bar()  # map / save_to_disk show their own per-step bars
 
 OLD = f"/home/ehu/{os.environ['MN5_USER']}/scratch/data/leonardo/images_v1/"  # MN5 home of whoever exported the caches
 NEW = "/leonardo_work/AIFAC_5C0_261/datasets/train/finevisionProcessed/images/"
@@ -30,11 +34,14 @@ def fix(batch):
     return {"images": out}
 
 
-for path in sys.argv[1:]:
+overall = tqdm(sys.argv[1:], desc="datasets", unit="ds", position=0, dynamic_ncols=True)
+for path in overall:
     path = path.rstrip("/")
+    overall.set_postfix_str(os.path.basename(os.path.dirname(path)))
     if os.path.exists(os.path.join(path, MARKER)):
-        print(f"{path}: already rewritten, skipping")
+        tqdm.write(f"{path}: already rewritten, skipping")
         continue
+    tqdm.write(f"{path}: loading")
     ds = load_from_disk(path)
     n_shards = len(json.load(open(os.path.join(path, "state.json")))["_data_files"])
     new = ds.map(fix, batched=True, batch_size=10000, num_proc=int(os.environ.get("SLURM_CPUS_PER_TASK", "4")), features=ds.features,
@@ -44,17 +51,19 @@ for path in sys.argv[1:]:
     paths = [i["path"] for x in new.select(random.sample(range(len(new)), min(5000, len(new))))["images"]
              if x for i in x if i.get("path")]
     bad_prefix = [p for p in paths if not p.startswith(NEW)]
-    missing = [p for p in paths if p.startswith(NEW) and not os.path.exists(p)]
+    missing = [p for p in tqdm(paths, desc="check images exist", unit="img", leave=False)
+               if p.startswith(NEW) and not os.path.exists(p)]
     if bad_prefix or missing or not paths:
         sys.exit(f"{path}: {len(paths)} sampled paths, {len(bad_prefix)} unexpected prefix "
                  f"(e.g. {bad_prefix[:2]}), {len(missing)} missing (e.g. {missing[:2]}) — NOT replacing")
 
     tmp = path + ".tmp_leonardo"
     shutil.rmtree(tmp, ignore_errors=True)
+    tqdm.write(f"{path}: checks passed, saving {n_shards} shards")
     new.save_to_disk(tmp, num_shards=n_shards)
     old = path + ".mn5_paths"
     os.rename(path, old)
     os.rename(tmp, path)
     open(os.path.join(path, MARKER), "w").write(f"{OLD} -> {NEW}\n")
     shutil.rmtree(old)
-    print(f"{path}: {len(new)} rows rewritten, {len(paths)} sampled image paths exist")
+    tqdm.write(f"{path}: {len(new)} rows rewritten, {len(paths)} sampled image paths exist")
