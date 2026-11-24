@@ -37,7 +37,7 @@ for path in sys.argv[1:]:
         continue
     ds = load_from_disk(path)
     n_shards = len(json.load(open(os.path.join(path, "state.json")))["_data_files"])
-    new = ds.map(fix, batched=True, batch_size=10000, num_proc=8, features=ds.features,
+    new = ds.map(fix, batched=True, batch_size=10000, num_proc=int(os.environ.get("SLURM_CPUS_PER_TASK", "4")), features=ds.features,
                  desc=f"rewrite {os.path.basename(os.path.dirname(path))}")
 
     # Every path must now be on Leonardo, and a random sample must exist.

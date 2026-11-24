@@ -5,8 +5,8 @@
 #SBATCH --account=AIFAC_S07_127
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G               # image-path rewrite (fix_image_paths.py) runs here too
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G               # image-path rewrite (fix_image_paths.py) runs here too
 #SBATCH --time=04:00:00              # lrd_all_serial max walltime
 #SBATCH --output=mn5_pull_data_%j.out
 #SBATCH --error=mn5_pull_data_%j.err
